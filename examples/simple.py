@@ -7,7 +7,7 @@ from AutoConversation import State, Conversation, AutoConvHandler
 # Enable logging and port
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_TOKEN = "1281880732:AAFirzI_RqHo6Sqk0thBICGxSFPMbASASLM"
+BOT_TOKEN = "Put your bot token here"
 
 #--------------------------------- Simple commands -----------------------------------
 

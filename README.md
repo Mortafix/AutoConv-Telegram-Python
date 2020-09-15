@@ -81,4 +81,4 @@ AutoConvHandler(conversation,telegram_state,back_button=None)
 # manage conversation with update and context
 manage_conversation(update,context)
 ```
-- `update` e `context`: update and context from the telegram bot function. {`Telegram.update` and `Telegram.context`}
+- `update` and `context`: from telegram bot function. {`Telegram.update` and `Telegram.context`}

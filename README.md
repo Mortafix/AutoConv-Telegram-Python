@@ -4,6 +4,16 @@
 pip3 install telegram-autoconv
 ```
 
+# Requirements
+* Python 3.8
+
+# Import
+```python
+from autoconv.state import State
+from autoconv.conversation import Conversation
+from autoconv.autoconv_handler import AutoConvHandler
+```
+
 # Documentation
 I know you want examples, in fact there is a beautiful folder with some examples.  
 But here, you can find a little documentation.

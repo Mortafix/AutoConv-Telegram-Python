@@ -2,7 +2,9 @@ import logging
 from telegram import ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
 
-from AutoConversation import State, Conversation, AutoConvHandler
+from autoconv.state import State
+from autoconv.conversation import Conversation
+from autoconv.autoconv_handler import AutoConvHandler
 
 # Enable logging and port
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)

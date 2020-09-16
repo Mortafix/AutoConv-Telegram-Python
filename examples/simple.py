@@ -9,7 +9,7 @@ from autoconv.autoconv_handler import AutoConvHandler
 # Enable logging and port
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_TOKEN = "1281880732:AAEWIbjJOrMU7ge13lXsO7w57eia4emQED8"
+BOT_TOKEN = "Put your bot token here"
 
 #--------------------------------- Simple commands -----------------------------------
 

@@ -29,10 +29,18 @@ State(name,message,type=int,parse_mode=None)
 
 ```python
 # callback handler
-add_keyboard(keyboard,size=None)
+add_keyboard(keyboard,size=None,max_row=3)
 ```
 - `keyboard`: inline keyboard. Can be a dict (with custom value as key) or a list (default int value as key). {`name list` or `value:name dict`}
 - `size`: size for each row of the keyboard. {`int tuple`}
+- `max_row`: total values in a row, ignored if size is specified. {`int`}
+
+```python
+# callback handler
+add_dynamic_keyboard(function,max_row=3)
+```
+- `function`: function must have two parameters (`update` and `context`). It can return a `dict` or a `list` for a keyboard. Called when its state is reached. {`func`}
+- `max_row`: total values in a row. {`int`}
 
 ```python
 # text handler
@@ -45,7 +53,7 @@ add_text(regex=None,error_message=None)
 # function to execute in this state
 add_action(function)
 ```
-- `function`: function must have two parameters (`update` and `context`). It can return a `str`, repleacing 3 `@` (`@@@`) in the message. {`func`}
+- `function`: function must have two parameters (`update` and `context`). It can return a `str`, repleacing 3 `@` (`@@@`) in the message. Called when its state is reached. {`func`}
 
 ### Conversation
 ```python

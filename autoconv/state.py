@@ -1,8 +1,9 @@
 from math import ceil
+from typing import Callable
 
 def raise_type_error(var,name,types):
-	if type(types) is not list: types = [types]
-	if var and type(var) not in types: raise TypeError(f"{name} must be {' or '.join([x.__name__ for x in types])}")
+	if type(types) is not tuple: types = (types,)
+	if var and not isinstance(var,types): raise TypeError(f"{name} must be {' or '.join([x.__name__ for x in types])}")
 
 class State:
 
@@ -10,22 +11,23 @@ class State:
 		self.name = name
 		self.data_type = type
 		self.msg = msg
+		self.mode = parse_mode
 		self.callback = None
 		self.text = None
 		self.action = None
-		self.mode = parse_mode
+		self.build = None
 	
 	def __str__(self):
 		return f'State <{self.name}>'
 
-	def add_keyboard(self,keyboard,size=None):
+	def add_keyboard(self,keyboard,size=None,max_row=3):
 		'''Add inline keyboard for the state'''
-		raise_type_error(keyboard,'keyboard',[list,dict])
+		raise_type_error(keyboard,'keyboard',(list,dict))
 		raise_type_error(size,'size',tuple)
-		if type(keyboard) is list: keyboard = {i:v for i,v in enumerate(keyboard)}
+		if isinstance(keyboard,list): keyboard = {i:v for i,v in enumerate(keyboard)}
 		if size and sum(size) != len(keyboard): raise ValueError(f'Keyboard length ({len(keyboard)}) must be the same size as the sum of row size ({sum(size)}).')
 		elem_n = len(keyboard)
-		if not size: size = [3 for _ in range(elem_n//3)] + ([r,] if (r := elem_n % 3) else [])
+		if not size: size = [max_row for _ in range(elem_n//max_row)] + ([r,] if (r := elem_n % max_row) else [])
 		self.callback = (keyboard,tuple(size))
 
 	def add_text(self,regex=None,error=None):
@@ -37,4 +39,12 @@ class State:
 
 	def add_action(self,function):
 		'''Add action to do with this command'''
+		raise_type_error(function,'function',(Callable))
 		self.action = function
+
+	def add_dynamic_keyboard(self,function,max_row=3):
+		'''Add action to build a keyboard dynamically'''
+		raise_type_error(function,'function',(Callable))
+		raise_type_error(max_row,'max_row',(int))
+		self.build = function
+		self.max_row = max_row

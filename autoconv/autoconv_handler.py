@@ -18,7 +18,7 @@ class AutoConvHandler:
 
 	def _next_state(self,state,value):
 		'''Follow state ruote'''
-		if value not in self.conversation.routes.get(state.name) and -1 not in self.conversation.routes.get(state.name): raise ValueError(f'Value {value} don\'t exists as route of {state}, neither a default route.') 
+		if value not in self.conversation.routes.get(state.name) and -1 not in self.conversation.routes.get(state.name): raise ValueError(f'Deafult route not found and value {value} doesn\'t exist as route of {state}.') 
 		return self.conversation.routes.get(state.name).get(value) if value in self.conversation.routes.get(state.name) else self.conversation.routes.get(state.name).get(-1)
 
 	def _change_state(self,telegram_id,data):
@@ -76,6 +76,7 @@ class AutoConvHandler:
 		# next stage
 		typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
 		state = self._change_state(telegram_id,typed_data)
+		if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
 		keyboard = self._build_keyboard(state)
 		ret = state.action(self.update,self.context) if state.action else None
 		msg = state.msg if ret == None else state.msg.replace('@@@',ret)

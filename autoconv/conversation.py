@@ -35,15 +35,15 @@ class Conversation:
 		raise_type_error(routes,'routes',dict)
 		raise_type_error(default,'default',State)
 		raise_type_error(back,'back',State)
-		if state not in self.state_list: raise ValueError(f'{state} does not exists in this conversation.')
+		if state not in self.state_list: raise ValueError(f'{state} doesn\'t exist in this conversation.')
 		if routes:
 			for k,v in routes.items():
 				if (state.callback and k not in state.callback[0]) and k in (-1,'BACK'): raise ValueError(f'\'{k}\' it\'s not a possible value of {str(state)}.')
-				if v not in self.state_list: raise ValueError(f'{str(v)} does not exists in this conversation.')
+				if v not in self.state_list: raise ValueError(f'{str(v)} doesn\'t exist in this conversation.')
 			self.routes.update({state.name:routes})
 		if default:
-			if default not in self.state_list: raise ValueError(f'{str(default)} does not exists in this conversation.')
+			if default not in self.state_list: raise ValueError(f'{str(default)} doesn\'t exist in this conversation.')
 			s.update({-1:default}) if (s := self.routes.get(state.name)) else self.routes.update({state.name:{-1:default}})
 		if back:
-			if back not in self.state_list: raise ValueError(f'{str(default)} does not exists in this conversation.')
+			if back not in self.state_list: raise ValueError(f'{str(default)} doesn\'t exist in this conversation.')
 			s.update({'BACK':back}) if (s := self.routes.get(state.name)) else self.routes.update({state.name:{'BACK':back}})

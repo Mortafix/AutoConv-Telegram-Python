@@ -5,15 +5,15 @@ from re import match
 
 class AutoConvHandler:
 
-	def __init__(self,conversation,telegram_state_name,back_button=None):
+	def __init__(self,conversation,telegram_state_name,back_button='Back'):
 		self.conversation = conversation
 		self.NEXT = telegram_state_name
-		self.back = back_button
+		self.back_button = back_button
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
 		cmd_list = [[InlineKeyboardButton(text=key_param[0][i+su],callback_data=i+su) for i in range(si)] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
-		if self.back and state not in (self.conversation.start,self.conversation.end): cmd_list += [[InlineKeyboardButton(text=self.back,callback_data='BACK')]]
+		if state.back: cmd_list += [[InlineKeyboardButton(text=self.back_button,callback_data='BACK')]]
 		return InlineKeyboardMarkup(cmd_list) 
 
 	def _next_state(self,state,value):

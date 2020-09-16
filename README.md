@@ -20,12 +20,13 @@ But here, you can find a little documentation.
 
 ### State
 ```python
-State(name,message,type=int,parse_mode=None)
+State(name,message,type=int,parse_mode=None,back=False)
 ```
 - `name`: State name (and key for data dictionary). {`str`}
 - `message`: message you want to print in that state. {`str`}
 - `type`: data type. {`type`}
 - `parse_mode`: Telegram message parse mode. {`Telegram.parse_mode`}
+- `back`: enable back button. {`bool`}
 
 ```python
 # callback handler
@@ -79,11 +80,11 @@ add_route(state,ruotes=None,default=None,back=None)
 
 ### AutoConvHandler
 ```python
-AutoConvHandler(conversation,telegram_state,back_button=None)
+AutoConvHandler(conversation,telegram_state,back_button='Back')
 ```
 - `conversation`: conversation to handle. {`Conversation`}
 - `telegram_state`: Telegram state name to handle callback, text and other things. {`Telegram.handler`}
-- `back_button`: default back button for every State. {`str`}
+- `back_button`: placeholder for back button. {`str`}
 
 ```python
 # manage conversation with update and context

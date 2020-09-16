@@ -9,7 +9,7 @@ from autoconv.autoconv_handler import AutoConvHandler
 # Enable logging and port
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_TOKEN = "Put your bot token here"
+BOT_TOKEN = "1281880732:AAEWIbjJOrMU7ge13lXsO7w57eia4emQED8"
 
 #--------------------------------- Simple commands -----------------------------------
 
@@ -36,13 +36,13 @@ def recap(update,context):
 # State
 name = State('name','Enter your *name*.',type=str,parse_mode=MARKDOWN)
 name.add_text()
-gender = State('gender','Select your *gender*',parse_mode=MARKDOWN)
+gender = State('gender','Select your *gender*',parse_mode=MARKDOWN,back=True)
 gender.add_keyboard(['Male','Female','Other'])
-age = State('age','Enter your *age*',parse_mode=MARKDOWN)
+age = State('age','Enter your *age*',parse_mode=MARKDOWN,back=True)
 age.add_text(r'\d{1,2}','Enter a *valid* age')
-underage = State('consent','Do you know that the responsibility will fall on your parents?')
+underage = State('consent','Do you know that the responsibility will fall on your parents?',back=True)
 underage.add_keyboard(['Yes','Abort'])
-comment = State('comment','Do you want to enter additional comment?',type=comment_type)
+comment = State('comment','Do you want to enter additional comment?',type=comment_type,back=True)
 comment.add_keyboard(['Nope'])
 comment.add_text()
 end = State('end','@@@',parse_mode=MARKDOWN)

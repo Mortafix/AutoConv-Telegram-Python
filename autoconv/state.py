@@ -7,7 +7,7 @@ def raise_type_error(var,name,types):
 
 class State:
 
-	def __init__(self,name,msg,type=int,parse_mode=None):
+	def __init__(self,name,msg,type=int,parse_mode=None,back=False):
 		self.name = name
 		self.data_type = type
 		self.msg = msg
@@ -16,6 +16,7 @@ class State:
 		self.text = None
 		self.action = None
 		self.build = None
+		self.back = back
 	
 	def __str__(self):
 		return f'State <{self.name}>'

@@ -1,8 +1,8 @@
 from autoconv.state import State
 
 def raise_type_error(var,name,types):
-	if type(types) is not list: types = [types]
-	if var and type(var) not in types: raise TypeError(f"{name} must be {' or '.join([x.__name__ for x in types])}")
+	if type(types) is not tuple: types = (types,)
+	if var and not isinstance(var,types): raise TypeError(f"{name} must be {' or '.join([x.__name__ for x in types])}")
 
 class Conversation:
 
@@ -23,7 +23,7 @@ class Conversation:
 
 	def add_state(self,state):
 		'''Add state to the conversation'''
-		raise_type_error(state,'state',[State,list])
+		raise_type_error(state,'state',(State,list))
 		for s in state:
 			raise_type_error(s,'state',State)
 			if not self._state_already_exists(s): self.state_list.append(s)

@@ -9,6 +9,8 @@ class AutoConvHandler:
 		self.conversation = conversation
 		self.NEXT = telegram_state_name
 		self.back_button = back_button
+		self.prev_state = None
+		self.curr_state = conversation.start
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
@@ -27,6 +29,7 @@ class AutoConvHandler:
 		value = state.callback[0][data] if state.callback and state.callback[0].get(data) else data
 		if state != self.conversation.end: self.context.user_data.get(telegram_id).get('data').update({state.name:value})
 		new_state = self._next_state(state,data)
+		self.prev_state = self.curr_state; self.curr_state = new_state
 		self.context.user_data.get(telegram_id).update({'state':new_state,'error':False})
 		return new_state
 

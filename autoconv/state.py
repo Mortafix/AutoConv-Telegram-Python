@@ -25,7 +25,7 @@ class State:
 		'''Add inline keyboard for the state'''
 		raise_type_error(keyboard,'keyboard',(list,dict))
 		raise_type_error(size,'size',tuple)
-		if isinstance(keyboard,list): keyboard = {i:v for i,v in enumerate(keyboard)}
+		if isinstance(keyboard,list): keyboard = dict(enumerate(keyboard))
 		if size and sum(size) != len(keyboard): raise ValueError(f'Keyboard length ({len(keyboard)}) must be the same size as the sum of row size ({sum(size)}).')
 		elem_n = len(keyboard)
 		if not size: size = [max_row for _ in range(elem_n//max_row)] + ([r,] if (r := elem_n % max_row) else [])

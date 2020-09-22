@@ -12,7 +12,7 @@ class AutoConvHandler:
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
-		cmd_list = [[InlineKeyboardButton(text=key_param[0][i+su],callback_data=i+su) for i in range(si)] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
+		cmd_list = [[InlineKeyboardButton(text=key_param[0][k],callback_data=k) for k in list(key_param[0].keys())[su:su+si]] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
 		if state.back: cmd_list += [[InlineKeyboardButton(text=self.back_button,callback_data='BACK')]]
 		return InlineKeyboardMarkup(cmd_list) 
 

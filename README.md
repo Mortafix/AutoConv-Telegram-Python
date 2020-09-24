@@ -20,13 +20,14 @@ But here, you can find a little documentation.
 
 ### State
 ```python
-State(name,message,type=int,parse_mode=None,back=False)
+State(name,message,type=int,parse_mode=None,back=False,webpage_preview=False)
 ```
 - `name`: State name (and key for data dictionary). {`str`}
 - `message`: message you want to print in that state. {`str`}
 - `type`: data type. {`type`}
 - `parse_mode`: Telegram message parse mode. {`Telegram.parse_mode`}
 - `back`: enable back button. {`bool`}
+- `webpage_preview`: enable webpage preview in the state message. {`bool`}
 
 ```python
 # callback handler

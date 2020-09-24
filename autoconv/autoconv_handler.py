@@ -83,6 +83,6 @@ class AutoConvHandler:
 		keyboard = self._build_keyboard(state)
 		ret = state.action(self.update,self.context) if state.action else None
 		msg = state.msg if ret == None else state.msg.replace('@@@',ret)
-		to_reply(f'{msg}',reply_markup=keyboard,parse_mode=state.mode)
+		to_reply(f'{msg}',reply_markup=keyboard,parse_mode=state.mode,disable_web_page_preview=not state.webpage_preview)
 		if state == self.conversation.end: context.user_data.update({telegram_id:None}); return ConversationHandler.END
 		return self.NEXT

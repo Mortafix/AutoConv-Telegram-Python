@@ -61,8 +61,11 @@ class AutoConvHandler:
 		# start
 		if not self.context.user_data.get(telegram_id):
 			state = self.conversation.start
+			if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
 			keyboard = self._build_keyboard(state)
-			msg = self.update.message.reply_text(f'{state.msg}',reply_markup=keyboard,parse_mode=state.mode)
+			ret = state.action(self.update,self.context) if state.action else None
+			reply_msg = state.msg if ret == None else state.msg.replace('@@@',ret)
+			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode)
 			self.context.user_data.update({telegram_id:{'state':state,'error':False,'bot-msg':msg,'data':{}}})
 			return self.NEXT
 		# get data

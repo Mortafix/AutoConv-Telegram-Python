@@ -53,13 +53,23 @@ class AutoConvHandler:
 		query.edit_message_text(f"{new_state}",reply_markup=keyboard,parse_mode=new_state.mode)
 		return self.NEXT
 
-	def manage_conversation(self,update,context):
+	def restart(self):
+		telegram_id = self.update.effective_chat.id
+		if (c := self.context.user_data.get(telegram_id)):
+			if (m := c.get('bot-msg')): m.delete()
+			self.context.user_data.pop(telegram_id)
+		self.prev_state = None
+		self.curr_state = self.conversation.start
+		return self
+
+	def manage_conversation(self,update,context,delete_first=True):
 		'''Master function for converastion'''
 		self.update = update
 		self.context = context
 		telegram_id = self.update.effective_chat.id
 		# start
 		if not self.context.user_data.get(telegram_id):
+			if delete_first: update.message.delete()
 			state = self.conversation.start
 			self.context.user_data.update({telegram_id:{'state':state,'error':False,'data':{}}})
 			if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)

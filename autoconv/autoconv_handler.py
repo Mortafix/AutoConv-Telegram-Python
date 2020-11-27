@@ -95,13 +95,13 @@ class AutoConvHandler:
 		# next stage
 		typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
 		state = self._change_state(telegram_id,typed_data)
-		if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
-		keyboard = self._build_keyboard(state)
 		ret = state.action(self.update,self.context) if state.action else None
 		if state.routes:
 			ro,de,ba = state.routes(self.update,self.context)
 			self.conversation.add_routes(state,ro,de,ba)
 		msg = state.msg if ret == None else state.msg.replace('@@@',ret)
+		if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
+		keyboard = self._build_keyboard(state)
 		to_reply(f'{msg}',reply_markup=keyboard,parse_mode=state.mode,disable_web_page_preview=not state.webpage_preview)
 		if state == self.conversation.end: context.user_data.update({telegram_id:None}); return ConversationHandler.END
 		return self.NEXT

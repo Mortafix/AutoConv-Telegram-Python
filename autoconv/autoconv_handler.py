@@ -11,6 +11,7 @@ class AutoConvHandler:
 		self.back_button = back_button
 		self.prev_state = None
 		self.curr_state = conversation.start
+		self.update, self.context = None, None
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
@@ -54,12 +55,13 @@ class AutoConvHandler:
 		return self.NEXT
 
 	def restart(self):
-		telegram_id = self.update.effective_chat.id
-		if (c := self.context.user_data.get(telegram_id)):
-			if (m := c.get('bot-msg')): m.delete()
-			self.context.user_data.pop(telegram_id)
-		self.prev_state = None
-		self.curr_state = self.conversation.start
+		if self.update:
+			telegram_id = self.update.effective_chat.id
+			if (c := self.context.user_data.get(telegram_id)):
+				if (m := c.get('bot-msg')): m.delete()
+				self.context.user_data.pop(telegram_id)
+			self.prev_state = None
+			self.curr_state = self.conversation.start
 		return self
 
 	def manage_conversation(self,update,context,delete_first=True):
@@ -96,6 +98,9 @@ class AutoConvHandler:
 		if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
 		keyboard = self._build_keyboard(state)
 		ret = state.action(self.update,self.context) if state.action else None
+		if state.routes:
+			ro,de,ba = state.routes(self.update,self.context)
+			self.conversation.add_routes(state,ro,de,ba)
 		msg = state.msg if ret == None else state.msg.replace('@@@',ret)
 		to_reply(f'{msg}',reply_markup=keyboard,parse_mode=state.mode,disable_web_page_preview=not state.webpage_preview)
 		if state == self.conversation.end: context.user_data.update({telegram_id:None}); return ConversationHandler.END

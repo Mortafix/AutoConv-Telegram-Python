@@ -74,9 +74,12 @@ class AutoConvHandler:
 			if delete_first: update.message.delete()
 			state = self.conversation.start
 			self.context.user_data.update({telegram_id:{'state':state,'error':False,'data':{}}})
+			ret = state.action(self.update,self.context) if state.action else None
+			if state.routes:
+				ro,de,ba = state.routes(self.update,self.context)
+				self.conversation.add_routes(state,ro,de,ba)
 			if state.build: state.add_keyboard(state.build(self.update,self.context),max_row=state.max_row)
 			keyboard = self._build_keyboard(state)
-			ret = state.action(self.update,self.context) if state.action else None
 			reply_msg = state.msg if ret == None else state.msg.replace('@@@',ret)
 			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode)
 			self.context.user_data.get(telegram_id).update({'bot-msg':msg})

@@ -50,6 +50,7 @@ class Conversation:
 
 	def get_state(self,state_name):
 		'''Get state from states list by name'''
+		if state_name == self.start.name: return self.start
 		for state in self.state_list:
 			if state.name == state_name: return state
 		return None

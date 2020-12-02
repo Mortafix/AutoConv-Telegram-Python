@@ -54,11 +54,13 @@ class AutoConvHandler:
 		query.edit_message_text(f"{new_state}",reply_markup=keyboard,parse_mode=new_state.mode)
 		return self.NEXT
 
+	def _build_dynamic_routes(self,state):
+		ro,de,ba = state.routes(self.update,self.context)
+		self.conversation.add_routes(state,ro,de,ba)
+
 	def _build_dynamic_stuff(self,state):
 		ret = state.action(self.update,self.context) if state.action else None
-		if state.routes:
-			ro,de,ba = state.routes(self.update,self.context)
-			self.conversation.add_routes(state,ro,de,ba)
+		if state.routes: self._build_dynamic_routes(state)
 		if state.build: 
 			keyboard = state.build(self.update,self.context)
 			keyboard,size = keyboard if isinstance(keyboard,tuple) else (keyboard,None)
@@ -103,6 +105,7 @@ class AutoConvHandler:
 			to_reply = self.context.user_data.get(telegram_id).get('bot-msg').edit_text
 			self.update.message.delete()
 		# next stage
+		if not self.conversation.routes.get(state.name) and state.routes: self._build_dynamic_routes(state)
 		typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
 		state = self._change_state(telegram_id,typed_data)
 		keyboard,reply_msg = self._build_dynamic_stuff(state)

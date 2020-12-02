@@ -47,3 +47,9 @@ class Conversation:
 		if back:
 			if back not in self.state_list: raise ValueError(f'{str(default)} doesn\'t exist in this conversation.')
 			s.update({'BACK':back}) if (s := self.routes.get(state.name)) else self.routes.update({state.name:{'BACK':back}})
+
+	def get_state(self,state_name):
+		'''Get state from states list by name'''
+		for state in self.state_list:
+			if state.name == state_name: return state
+		return None

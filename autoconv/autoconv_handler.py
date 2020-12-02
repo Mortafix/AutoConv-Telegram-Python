@@ -26,19 +26,19 @@ class AutoConvHandler:
 
 	def _change_state(self,telegram_id,data):
 		'''Set variables for next state'''
-		state = self.context.user_data.get(telegram_id).get('state')
+		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
 		value = state.callback[0][data] if state.callback and state.callback[0].get(data) else data
 		if state != self.conversation.end: self.context.user_data.get(telegram_id).get('data').update({state.name:value})
 		new_state = self._next_state(state,data)
 		self.prev_state = self.curr_state; self.curr_state = new_state
-		self.context.user_data.get(telegram_id).update({'state':new_state,'error':False})
+		self.context.user_data.get(telegram_id).update({'state':new_state.name,'error':False})
 		return new_state
 
 	def _wrong_text(self):
 		'''Handler for wrong regex in text state'''
 		telegram_id = self.update.message.chat.id
 		self.update.message.delete()
-		state = self.context.user_data.get(telegram_id).get('state')
+		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
 		if state.text and not self.context.user_data.get(telegram_id).get('error'):
 			keyboard = self._build_keyboard(state)
 			self.context.user_data.get(telegram_id).update({'error':True})
@@ -86,13 +86,13 @@ class AutoConvHandler:
 		if not self.context.user_data.get(telegram_id):
 			if delete_first: update.message.delete()
 			state = self.conversation.start
-			self.context.user_data.update({telegram_id:{'state':state,'error':False,'data':{}}})
+			self.context.user_data.update({telegram_id:{'state':state.name,'error':False,'data':{}}})
 			keyboard,reply_msg = self._build_dynamic_stuff(state)
 			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode)
 			self.context.user_data.get(telegram_id).update({'bot-msg':msg})
 			return self.NEXT
 		# get data
-		state = self.context.user_data.get(telegram_id).get('state')
+		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
 		if self.update.callback_query:
 			data = self.update.callback_query.data
 			to_reply = self.update.callback_query.edit_message_text

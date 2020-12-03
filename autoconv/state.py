@@ -6,7 +6,7 @@ def type_check(func):
 		for a,v,t in args_list:
 			if (isinstance(t,_VariadicGenericAlias) and not isinstance(a,t)) or (isinstance(t,_GenericAlias) and t.__args__ and not isinstance(a,t.__args__)) or (not isinstance(t,(_GenericAlias,_VariadicGenericAlias)) and not isinstance(a,t)):
 				raise TypeError(f"{v} must be {(not isinstance(t,_GenericAlias) and t) or (t.__args__ and ' or '.join(x.__name__ for x in t.__args__)) or 'function'}")
-		return func(*args)
+		return func(*args,**kwargs)
 	return wrapper
 
 class State:

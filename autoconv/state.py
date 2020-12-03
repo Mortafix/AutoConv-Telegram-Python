@@ -53,9 +53,10 @@ class State:
 		self.build = function
 		self.max_row = max_row
 
-	def add_custom_keyboard(self,custom_keyboard):
-		'''Add a custom ReplyMarkup keyboard'''
-		self.custom = custom_keyboard
+	def add_custom_keyboard(self,function):
+		'''Add function to build custom ReplyMarkup keyboard | must return a value for ReplyMarkup'''
+		raise_type_error(function,'function',(Callable))
+		self.custom = function
 
 	def add_dynamic_routes(self,function):
 		'''Add function to create dynamic routes | must return 3 value (routes,default,back)'''

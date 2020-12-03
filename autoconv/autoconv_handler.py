@@ -17,7 +17,7 @@ class AutoConvHandler:
 		'''Build Keyboard for callback state'''
 		cmd_list = [[InlineKeyboardButton(text=key_param[0][k],callback_data=k) for k in list(key_param[0].keys())[su:su+si]] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
 		if state.back: cmd_list += [[InlineKeyboardButton(text=self.back_button,callback_data='BACK')]]
-		return state.custom or InlineKeyboardMarkup(cmd_list) 
+		return (state.custom and state.custom(self.update,self.context)) or InlineKeyboardMarkup(cmd_list) 
 
 	def _next_state(self,state,value):
 		'''Follow state ruote'''

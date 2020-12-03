@@ -1,8 +1,5 @@
-from autoconv.state import State
-
-def raise_type_error(var,name,types):
-	if type(types) is not tuple: types = (types,)
-	if var and not isinstance(var,types): raise TypeError(f"{name} must be {' or '.join([x.__name__ for x in types])}")
+from autoconv.state import State,type_check
+from typing import Union,Optional
 
 class Conversation:
 
@@ -15,26 +12,23 @@ class Conversation:
 	def __str__(self):
 		routes_print = '\n'.join(['  * {}:\n{}'.format(s,'\n'.join(['      {:>5} -> {}'.format(v,d) for v,d in r.items()])) for s,r in self.routes.items()])
 		heading = f'CONVERSATION\n{self.start} ==> ' + (f'{self.end}' if self.end else f'...')
-		return f'{heading}\n# State list: {[str(s) for s in self.state_list]}\n# Routes:\n{routes_print}'
+		return f'{heading}\n# State list: {[str(s) for s in self.state_list]}\n#\tRoutes:\n{routes_print}'
 
-	def _state_already_exists(self,state):
+	@type_check
+	def _state_already_exists(self,state:State):
 		'''Check for duplicates'''
 		return any([state.name == s.name for s in self.state_list])
 
-	def add_state(self,state):
+	@type_check
+	def add_state(self,state:Union[State,list]):
 		'''Add state to the conversation'''
-		raise_type_error(state,'state',(State,list))
 		for s in state:
-			raise_type_error(s,'state',State)
 			if not self._state_already_exists(s): self.state_list.append(s)
 			else: raise ValueError(f'Already exists a state with name <{s.name}>.') 
 
-	def add_routes(self,state,routes=None,default=None,back=None):
+	@type_check
+	def add_routes(self,state:State,routes:Optional[dict]=None,default:Optional[State]=None,back:Optional[State]=None):
 		'''Add state routes'''
-		raise_type_error(state,'state',State)
-		raise_type_error(routes,'routes',dict)
-		raise_type_error(default,'default',State)
-		raise_type_error(back,'back',State)
 		if state not in self.state_list: raise ValueError(f'{state} doesn\'t exist in this conversation.')
 		if routes:
 			for k,v in routes.items():
@@ -48,7 +42,8 @@ class Conversation:
 			if back not in self.state_list: raise ValueError(f'{str(default)} doesn\'t exist in this conversation.')
 			s.update({'BACK':back}) if (s := self.routes.get(state.name)) else self.routes.update({state.name:{'BACK':back}})
 
-	def get_state(self,state_name):
+	@type_check
+	def get_state(self,state_name:str):
 		'''Get state from states list by name'''
 		if state_name == self.start.name: return self.start
 		for state in self.state_list:

@@ -19,6 +19,7 @@ class State:
 		self.back = back
 		self.webpage_preview = webpage_preview
 		self.routes = None
+		self.custom = None
 	
 	def __str__(self):
 		return f'State <{self.name}>'
@@ -51,6 +52,10 @@ class State:
 		raise_type_error(max_row,'max_row',(int))
 		self.build = function
 		self.max_row = max_row
+
+	def add_custom_keyboard(self,custom_keyboard):
+		'''Add a custom ReplyMarkup keyboard'''
+		self.custom = custom_keyboard
 
 	def add_dynamic_routes(self,function):
 		'''Add function to create dynamic routes | must return 3 value (routes,default,back)'''

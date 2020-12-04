@@ -59,10 +59,7 @@ class AutoConvHandler:
 		ro,de,ba = state.routes(self.update,self.context)
 		self.conversation.add_routes(state,ro,de,ba)
 
-	def _build_dynamic_stuff(self,state):
-		if self.prev_state and self.prev_state.list and self.curr_state != self.prev_state:
-			self.prev_state.add_keyboard(*self._bkup_state_keyboard)
-			self.conversation.add_routes(self.prev_state,self._bkup_state_routes) 
+	def _build_dynamic_stuff(self,state): 
 		data = self.context.user_data.get(self.update.effective_chat.id)
 		if state.list:
 			if (state_l := data.get('list')):
@@ -77,7 +74,12 @@ class AutoConvHandler:
 				arrows_buttons = {i:b for i,b in enumerate(state.list_buttons)} if not state.list_all else {i:b for i,b in enumerate(state_l)}
 				state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(2,len(basic_routes))) if not state.list_all else state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(len(state_l),len(basic_routes)))
 				self.conversation.add_routes(state,basic_routes,default=state)
-				data.update({'list':state_l,'list_i':0})
+				new_i = state.list_start
+				data.update({'list':state_l,'list_i':new_i})
+			if not state.list_all:
+				if new_i in (0,len(state_l)-1): state.callback[0].pop((1,0)[not new_i])
+				if new_i in (1,len(state_l)-2): state.callback[0].update({i:b for i,b in enumerate(state.list_buttons)})
+				if new_i in (0,1,len(state_l)-2,len(state_l)-1): state.callback = dict(sorted(state.callback[0].items())),((2,1)[new_i not in (1,len(state_l)-2)],*state.callback[1][1:])
 		elif data.get('list'): data.pop('list'),data.pop('list_i')
 		ret = state.action(self.update,self.context) if state.action else None
 		if state.routes: self._build_dynamic_routes(state)
@@ -104,6 +106,10 @@ class AutoConvHandler:
 		self.update = update
 		self.context = context
 		telegram_id = self.update.effective_chat.id
+		# restore dynamic list state
+		if self.prev_state and self.prev_state.list and self.curr_state != self.prev_state:
+			self.prev_state.add_keyboard(*self._bkup_state_keyboard)
+			self.conversation.add_routes(self.prev_state,self._bkup_state_routes)
 		# start
 		if not self.context.user_data.get(telegram_id):
 			if delete_first: update.message.delete()

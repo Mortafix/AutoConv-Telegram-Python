@@ -12,6 +12,7 @@ class AutoConvHandler:
 		self.prev_state = None
 		self.curr_state = conversation.start
 		self.update, self.context = None, None
+		self._bkup_state_routes,self._bkup_state_keyboard = None,None
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
@@ -59,20 +60,25 @@ class AutoConvHandler:
 		self.conversation.add_routes(state,ro,de,ba)
 
 	def _build_dynamic_stuff(self,state):
+		if self.prev_state and self.prev_state.list and self.curr_state != self.prev_state:
+			self.prev_state.add_keyboard(*self._bkup_state_keyboard)
+			self.conversation.add_routes(self.prev_state,self._bkup_state_routes) 
+		data = self.context.user_data.get(self.update.effective_chat.id)
 		if state.list:
-			data = self.context.user_data.get(self.update.effective_chat.id)
 			if (state_l := data.get('list')):
 				i = int(data.get('list_i'))
-				new_i = data.get('data').get(state.name) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1]]
+				new_i = state_l.index(data.get('data').get(state.name)) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1]]
 				data.update({'list_i':new_i})
 			else:
 				state_l = state.list(self.update,self.context)
+				self._bkup_state_routes,self._bkup_state_keyboard = self.conversation.routes.get(state.name),state.callback
 				basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items()}
 				basic_keyboard = {k+len(state_l):v for k,v in state.callback[0].items()}
-				arrows_buttons = {i:b for i,b in enumerate(state.list_buttons)}
-				state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(2,len(basic_routes))) if not state.list_all else self.state.add_keyboard()
+				arrows_buttons = {i:b for i,b in enumerate(state.list_buttons)} if not state.list_all else {i:b for i,b in enumerate(state_l)}
+				state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(2,len(basic_routes))) if not state.list_all else state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(len(state_l),len(basic_routes)))
 				self.conversation.add_routes(state,basic_routes,default=state)
 				data.update({'list':state_l,'list_i':0})
+		elif data.get('list'): data.pop('list'),data.pop('list_i')
 		ret = state.action(self.update,self.context) if state.action else None
 		if state.routes: self._build_dynamic_routes(state)
 		if state.build: 

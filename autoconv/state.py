@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Union,Callable,Optional,_GenericAlias,_VariadicGenericAlias
 
 def type_check(func):
@@ -35,6 +36,7 @@ class State:
 		'''Add inline keyboard for the state'''
 		if isinstance(keyboard,list): keyboard = dict(enumerate(keyboard))
 		if size and sum(size) != len(keyboard): raise ValueError(f'Keyboard length ({len(keyboard)}) must be the same size as the sum of row size ({sum(size)}).')
+		if size: size = reduce(lambda x,y:x+y,map(lambda x:[x] if x < 9 else [8]*(x//8)+([x%8],[])[not x%8],size))
 		elem_n = len(keyboard)
 		if not size: size = [max_row for _ in range(elem_n//max_row)] + ([r,] if (r := elem_n % max_row) else [])
 		self.callback = (keyboard,tuple(size))

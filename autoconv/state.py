@@ -24,6 +24,8 @@ class State:
 		self.webpage_preview = webpage_preview
 		self.routes = None
 		self.custom = None
+		self.list = None
+		self.list_all = None
 	
 	def __str__(self):
 		return f'State <{self.name}>'
@@ -60,6 +62,13 @@ class State:
 		self.custom = function
 
 	@type_check
-	def add_dynamic_routes(self,function):
+	def add_dynamic_routes(self,function:Callable):
 		'''Add function to create dynamic routes | must return 3 value (routes,default,back)'''
 		self.routes = function
+
+	@type_check
+	def add_dynamic_list(self,function:Callable,left_button:Optional[str]='<',right_button:Optional[str]='>',all_pages:Optional[bool]=False):
+		'''Add function to create a list with page'''
+		self.list = function
+		self.list_buttons = [left_button,right_button]
+		self.list_all = all_pages

@@ -59,6 +59,20 @@ class AutoConvHandler:
 		self.conversation.add_routes(state,ro,de,ba)
 
 	def _build_dynamic_stuff(self,state):
+		if state.list:
+			data = self.context.user_data.get(self.update.effective_chat.id)
+			if (state_l := data.get('list')):
+				i = int(data.get('list_i'))
+				new_i = data.get('data').get(state.name) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1]]
+				data.update({'list_i':new_i})
+			else:
+				state_l = state.list(self.update,self.context)
+				basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items()}
+				basic_keyboard = {k+len(state_l):v for k,v in state.callback[0].items()}
+				arrows_buttons = {i:b for i,b in enumerate(state.list_buttons)}
+				state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(2,len(basic_routes))) if not state.list_all else self.state.add_keyboard()
+				self.conversation.add_routes(state,basic_routes,default=state)
+				data.update({'list':state_l,'list_i':0})
 		ret = state.action(self.update,self.context) if state.action else None
 		if state.routes: self._build_dynamic_routes(state)
 		if state.build: 

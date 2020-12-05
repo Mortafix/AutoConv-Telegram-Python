@@ -27,12 +27,15 @@ class AutoConvHandler:
 
 	def _change_state(self,telegram_id,data):
 		'''Set variables for next state'''
+		data_context = self.context.user_data.get(telegram_id)
 		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
 		value = state.callback[0][data] if state.callback and state.callback[0].get(data) else data
 		if state != self.conversation.end: self.context.user_data.get(telegram_id).get('data').update({state.name:value})
 		new_state = self._next_state(state,data)
-		self.prev_state = self.curr_state; self.curr_state = new_state
-		self.context.user_data.get(telegram_id).update({'state':new_state.name,'error':False})
+		self.prev_state,self.curr_state = self.curr_state,new_state
+		data_context.update({'prev_state':self.prev_state.name,'state':new_state.name})
+		if new_state.text: data_context.update({'error':False})
+		elif data_context.get('error') != None: data_context.pop('error')
 		return new_state
 
 	def _wrong_text(self):
@@ -114,7 +117,7 @@ class AutoConvHandler:
 		if not self.context.user_data.get(telegram_id):
 			if delete_first: update.message.delete()
 			state = self.conversation.start
-			self.context.user_data.update({telegram_id:{'state':state.name,'error':False,'data':{}}})
+			self.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
 			keyboard,reply_msg = self._build_dynamic_stuff(state)
 			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode)
 			self.context.user_data.get(telegram_id).update({'bot-msg':msg})

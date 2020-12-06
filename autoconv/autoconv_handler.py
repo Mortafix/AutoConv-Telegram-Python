@@ -6,10 +6,9 @@ from functools import reduce
 
 class AutoConvHandler:
 
-	def __init__(self,conversation,telegram_state_name,back_button='Back'):
+	def __init__(self,conversation,telegram_state_name):
 		self.conversation = conversation
 		self.NEXT = telegram_state_name
-		self.back_button = back_button
 		self.prev_state = None
 		self.curr_state = conversation.start
 		self.update, self.context = None, None
@@ -18,7 +17,7 @@ class AutoConvHandler:
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
 		cmd_list = [[InlineKeyboardButton(text=key_param[0][k],callback_data=k) for k in list(key_param[0].keys())[su:su+si]] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
-		if state.back: cmd_list += [[InlineKeyboardButton(text=self.back_button,callback_data='BACK')]]
+		if state.back_button and self.conversation.routes.get(state.name).get('BACK'): cmd_list += [[InlineKeyboardButton(text=state.back_button,callback_data='BACK')]]
 		return (state.custom and state.custom(self.update,self.context)) or cmd_list
 
 	def _next_state(self,state,value):
@@ -30,7 +29,7 @@ class AutoConvHandler:
 		'''Set variables for next state'''
 		data_context = self.context.user_data.get(telegram_id)
 		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
-		if state.list:
+		if state.list and isinstance(data,int):
 			list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
 			if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
 			value = reduce(lambda x,y: x+y,self.list_keyboard)[list_idx].text
@@ -74,6 +73,7 @@ class AutoConvHandler:
 			state_l = state.list(self.update,self.context)
 			data.update({'list':state_l,'list_i':state.list_start})
 		if self._bkup_state_routes:
+			if 'BACK' in self._bkup_state_routes: self._bkup_state_routes.pop('BACK')
 			self.conversation.add_routes(self.curr_state,self._bkup_state_routes)
 			self._bkup_state_routes = None
 
@@ -93,14 +93,14 @@ class AutoConvHandler:
 		self._bkup_state_routes = self.conversation.routes.get(state.name)
 		data = self.context.user_data.get(self.update.effective_chat.id)
 		state_l = data.get('list')
-		basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items()}
+		basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items() if k != 'BACK'}
 		for kl in keyboard:
 			for button in kl: 
-				if button.callback_data: button.callback_data += len(state_l)
+				if (c := button.callback_data) and isinstance(c,int): button.callback_data += len(state_l)
 		list_buttons = [InlineKeyboardButton(b,callback_data=i) for i,b in enumerate(state_l if state.list_all else state.list_buttons)]
 		keyboard = [list_buttons]+keyboard
 		self.list_keyboard = keyboard
-		self.conversation.add_routes(state,basic_routes,default=state)
+		self.conversation.add_routes(state,basic_routes,default=state,back=self.conversation.routes.get(state.name).get('BACK'))
 		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1):
 			if len(state_l) < 2: keyboard.pop(0)
 			else: keyboard[0].pop((1,0)[not i])
@@ -142,7 +142,7 @@ class AutoConvHandler:
 			state = self.conversation.start
 			self.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
 			keyboard,reply_msg = self._build_dynamic_stuff(state)
-			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode)
+			msg = self.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
 			self.context.user_data.get(telegram_id).update({'bot-msg':msg})
 			return self.NEXT
 		# get data
@@ -157,10 +157,9 @@ class AutoConvHandler:
 			to_reply = self.context.user_data.get(telegram_id).get('bot-msg').edit_text
 			self.update.message.delete()
 		# next stage
-		if not self.conversation.routes.get(state.name) and state.routes: self._build_dynamic_routes(state)
 		typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
 		state = self._change_state(telegram_id,typed_data)
 		keyboard,reply_msg = self._build_dynamic_stuff(state)
-		to_reply(f'{reply_msg}',reply_markup=keyboard,parse_mode=state.mode,disable_web_page_preview=not state.webpage_preview)
+		to_reply(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
 		if state == self.conversation.end: context.user_data.update({telegram_id:None}); return ConversationHandler.END
 		return self.NEXT

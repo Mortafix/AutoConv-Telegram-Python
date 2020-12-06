@@ -1,40 +1,30 @@
 from functools import reduce
-from typing import Union,Callable,Optional,_GenericAlias,_VariadicGenericAlias
-
-def type_check(func):
-	def wrapper(*args,**kwargs):
-		args_list = [(args[i+1],v,t) if i+1 < len(args) else (kwargs.get(v),v,t) for i,(v,t) in enumerate(func.__annotations__.items())]
-		for a,v,t in args_list:
-			if (isinstance(t,_VariadicGenericAlias) and not isinstance(a,t)) or (isinstance(t,_GenericAlias) and t.__args__ and not isinstance(a,t.__args__)) or (not isinstance(t,(_GenericAlias,_VariadicGenericAlias)) and not isinstance(a,t)):
-				raise TypeError(f"{v} must be {(not isinstance(t,_GenericAlias) and t) or (t.__args__ and ' or '.join(x.__name__ for x in t.__args__)) or 'function'}")
-		return func(*args,**kwargs)
-	return wrapper
+from typing import Callable,Union,Optional,List,Tuple,Mapping,Pattern,ByteString
+from pydantic import validate_arguments
 
 class State:
 
-	def __init__(self,name,msg,type=int,parse_mode=None,back=False,webpage_preview=False):
-		self.name = name
-		self.data_type = type
-		self.msg = msg
-		self.mode = parse_mode
+	@validate_arguments
+	def __init__(self,state_name:str,state_text:str,data_type:Callable=int,back_button:Optional[str]=None,**kwargs):
+		self.name = state_name
+		self.msg = state_text
+		self.data_type = data_type
+		self.back_button = back_button
+		self.kwargs = kwargs
 		self.callback = None
 		self.text = None
 		self.action = None
-		self.build = None
-		self.back = back
-		self.webpage_preview = webpage_preview
-		self.routes = None
+		self.build,self.max_row = None,None
 		self.custom = None
-		self.list = None
-		self.list_all = None
-		self.list_start = None
+		self.routes = None
+		self.list,self.list_all,self.list_start = None,None,None
 	
 	def __str__(self):
 		return f'State <{self.name}>'
 
-	@type_check
-	def add_keyboard(self,keyboard:Union[list,dict],size:Optional[tuple]=None,max_row:Optional[int]=3):
-		'''Add inline keyboard for the state'''
+	@validate_arguments
+	def add_keyboard(self,keyboard:Union[List[str],Tuple[list],Mapping[int,str]],size:Optional[Tuple[int]]=None,max_row:int=3):
+		'''Add inline keyboard handler'''
 		if isinstance(keyboard,list): keyboard = dict(enumerate(keyboard))
 		if size and sum(size) != len(keyboard): raise ValueError(f'Keyboard length ({len(keyboard)}) must be the same size as the sum of row size ({sum(size)}).')
 		if size: size = reduce(lambda x,y:x+y,map(lambda x:[x] if x < 9 else [8]*(x//8)+([x%8],[])[not x%8],size))
@@ -42,36 +32,36 @@ class State:
 		if not size: size = [max_row for _ in range(elem_n//max_row)] + ([r,] if (r := elem_n % max_row) else [])
 		self.callback = (keyboard,tuple(size))
 
-	@type_check
+	@validate_arguments
 	def add_text(self,regex:Optional[str]=None,error:Optional[str]=None):
-		'''Add handler for text input'''
+		'''Add text input handler'''
 		if not regex: regex = r'^.*$' 
 		self.text = (regex,error)
 
-	@type_check
+	@validate_arguments
 	def add_action(self,function:Callable):
-		'''Add action to do with this command'''
+		'''Add dynamic action'''
 		self.action = function
 
-	@type_check
-	def add_dynamic_keyboard(self,function:Callable,max_row:Optional[int]=3):
-		'''Add action to build a keyboard dynamically'''
+	@validate_arguments
+	def add_dynamic_keyboard(self,function:Callable,max_row:int=3):
+		'''Add function to build a keyboard dynamically'''
 		self.build = function
 		self.max_row = max_row
 
-	@type_check
+	@validate_arguments
 	def add_custom_keyboard(self,function:Callable):
-		'''Add function to build custom keyboard | must return a list of InlineKeyboardButton'''
+		'''Add function to build a custom keyboard | must return a list of InlineKeyboardButton'''
 		self.custom = function
 
-	@type_check
+	@validate_arguments
 	def add_dynamic_routes(self,function:Callable):
 		'''Add function to create dynamic routes | must return 3 value (routes,default,back)'''
 		self.routes = function
 
-	@type_check
-	def add_dynamic_list(self,function:Callable,start:Optional[int]=0,left_button:Optional[str]='<',right_button:Optional[str]='>',all_elements:Optional[bool]=False):
-		'''Add function to create a list with page'''
+	@validate_arguments
+	def add_dynamic_list(self,function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False):
+		'''Add function to create a dynamic list with pages'''
 		self.list = function
 		self.list_buttons = [left_button,right_button]
 		self.list_all = all_elements

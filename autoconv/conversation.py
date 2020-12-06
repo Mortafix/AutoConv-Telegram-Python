@@ -1,9 +1,11 @@
-from autoconv.state import State,type_check
+from autoconv.state import State
 from typing import Union,Optional
+from pydantic import validate_arguments
 
 class Conversation:
 
-	def __init__(self,start_state,end_state=None):
+	@validate_arguments(config=dict(arbitrary_types_allowed=True))
+	def __init__(self,start_state:State,end_state:Optional[State]=None):
 		self.start = start_state
 		self.end = end_state
 		self.state_list = [start_state,end_state] if end_state else [start_state]
@@ -14,19 +16,19 @@ class Conversation:
 		heading = f'CONVERSATION\n{self.start} ==> ' + (f'{self.end}' if self.end else f'...')
 		return f'{heading}\n# State list: {[str(s) for s in self.state_list]}\n#\tRoutes:\n{routes_print}'
 
-	@type_check
+	@validate_arguments(config=dict(arbitrary_types_allowed=True))
 	def _state_already_exists(self,state:State):
 		'''Check for duplicates'''
 		return any([state.name == s.name for s in self.state_list])
 
-	@type_check
+	@validate_arguments(config=dict(arbitrary_types_allowed=True))
 	def add_state(self,state:Union[State,list]):
 		'''Add state to the conversation'''
 		for s in state:
 			if not self._state_already_exists(s): self.state_list.append(s)
 			else: raise ValueError(f'Already exists a state with name <{s.name}>.') 
 
-	@type_check
+	@validate_arguments(config=dict(arbitrary_types_allowed=True))
 	def add_routes(self,state:State,routes:Optional[dict]=None,default:Optional[State]=None,back:Optional[State]=None):
 		'''Add state routes'''
 		if state not in self.state_list: raise ValueError(f'{state} doesn\'t exist in this conversation.')
@@ -42,7 +44,7 @@ class Conversation:
 			if back not in self.state_list: raise ValueError(f'{str(default)} doesn\'t exist in this conversation.')
 			s.update({'BACK':back}) if (s := self.routes.get(state.name)) else self.routes.update({state.name:{'BACK':back}})
 
-	@type_check
+	@validate_arguments
 	def get_state(self,state_name:str):
 		'''Get state from states list by name'''
 		if state_name == self.start.name: return self.start

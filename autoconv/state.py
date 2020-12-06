@@ -61,7 +61,7 @@ class State:
 
 	@type_check
 	def add_custom_keyboard(self,function:Callable):
-		'''Add function to build custom ReplyMarkup keyboard | must return a value for ReplyMarkup'''
+		'''Add function to build custom keyboard | must return a list of InlineKeyboardButton'''
 		self.custom = function
 
 	@type_check

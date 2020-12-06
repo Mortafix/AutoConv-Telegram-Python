@@ -2,6 +2,7 @@ from autoconv.conversation import Conversation
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler
 from re import match
+from functools import reduce
 
 class AutoConvHandler:
 
@@ -18,7 +19,7 @@ class AutoConvHandler:
 		'''Build Keyboard for callback state'''
 		cmd_list = [[InlineKeyboardButton(text=key_param[0][k],callback_data=k) for k in list(key_param[0].keys())[su:su+si]] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
 		if state.back: cmd_list += [[InlineKeyboardButton(text=self.back_button,callback_data='BACK')]]
-		return (state.custom and state.custom(self.update,self.context)) or InlineKeyboardMarkup(cmd_list) 
+		return (state.custom and state.custom(self.update,self.context)) or cmd_list
 
 	def _next_state(self,state,value):
 		'''Follow state ruote'''
@@ -29,7 +30,11 @@ class AutoConvHandler:
 		'''Set variables for next state'''
 		data_context = self.context.user_data.get(telegram_id)
 		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
-		value = state.callback[0][data] if state.callback and state.callback[0].get(data) else data
+		if state.list:
+			list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
+			if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
+			value = reduce(lambda x,y: x+y,self.list_keyboard)[list_idx].text
+		else: value = d if (c := state.callback) and (d := c[0].get(data)) else data
 		if state != self.conversation.end: self.context.user_data.get(telegram_id).get('data').update({state.name:value})
 		new_state = self._next_state(state,data)
 		self.prev_state,self.curr_state = self.curr_state,new_state
@@ -46,7 +51,7 @@ class AutoConvHandler:
 		if state.text and not self.context.user_data.get(telegram_id).get('error'):
 			keyboard = self._build_keyboard(state)
 			self.context.user_data.get(telegram_id).update({'error':True})
-			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{state.text[1]}",reply_markup=keyboard,parse_mode=state.mode)
+			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{state.text[1]}",reply_markup=InlineKeyboardMarkup(keyboard),parse_mode=state.mode)
 		return self.NEXT
 
 	def _going_back(self):
@@ -58,43 +63,63 @@ class AutoConvHandler:
 		query.edit_message_text(f"{new_state}",reply_markup=keyboard,parse_mode=new_state.mode)
 		return self.NEXT
 
+	def _update_dynamic_list(self,state):
+		'''Update i and routes backup for dynamic list'''
+		data = self.context.user_data.get(self.update.effective_chat.id)
+		if (state_l := data.get('list')):
+			i = int(data.get('list_i'))
+			new_i = state_l.index(data.get('data').get(state.name)) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1] or not i]
+			data.update({'list_i':new_i})
+		else:
+			state_l = state.list(self.update,self.context)
+			data.update({'list':state_l,'list_i':state.list_start})
+		if self._bkup_state_routes:
+			self.conversation.add_routes(self.curr_state,self._bkup_state_routes)
+			self._bkup_state_routes = None
+
 	def _build_dynamic_routes(self,state):
+		'''Build dynamic routes for current state'''
 		ro,de,ba = state.routes(self.update,self.context)
 		self.conversation.add_routes(state,ro,de,ba)
 
-	def _build_dynamic_stuff(self,state): 
+	def _build_dynamic_keyboard(self,state):
+		'''Build dynamic keyboard for current state'''
+		keyboard = state.build(self.update,self.context)
+		keyboard,size = keyboard if isinstance(keyboard,tuple) else (keyboard,None)
+		state.add_keyboard(keyboard,size,max_row=state.max_row)
+
+	def _build_dynamic_list(self,state,keyboard):
+		'''Build dynamic list for current state'''
+		self._bkup_state_routes = self.conversation.routes.get(state.name)
 		data = self.context.user_data.get(self.update.effective_chat.id)
-		if state.list:
-			if (state_l := data.get('list')):
-				i = int(data.get('list_i'))
-				new_i = state_l.index(data.get('data').get(state.name)) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1]]
-				data.update({'list_i':new_i})
-			else:
-				state_l = state.list(self.update,self.context)
-				self._bkup_state_routes,self._bkup_state_keyboard = self.conversation.routes.get(state.name),state.callback
-				basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items()}
-				basic_keyboard = {k+len(state_l):v for k,v in state.callback[0].items()}
-				arrows_buttons = {i:b for i,b in enumerate(state.list_buttons)} if not state.list_all else {i:b for i,b in enumerate(state_l)}
-				state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(2,len(basic_routes))) if not state.list_all else state.add_keyboard({**arrows_buttons,**basic_keyboard},size=(len(state_l),len(basic_routes)))
-				self.conversation.add_routes(state,basic_routes,default=state)
-				new_i = state.list_start
-				data.update({'list':state_l,'list_i':new_i})
-			if not state.list_all:
-				if new_i in (0,len(state_l)-1): state.callback[0].pop((1,0)[not new_i])
-				if new_i in (1,len(state_l)-2): state.callback[0].update({i:b for i,b in enumerate(state.list_buttons)})
-				if new_i in (0,1,len(state_l)-2,len(state_l)-1): state.callback = dict(sorted(state.callback[0].items())),((2,1)[new_i not in (1,len(state_l)-2)],*state.callback[1][1:])
-		elif data.get('list'): data.pop('list'),data.pop('list_i')
-		ret = state.action(self.update,self.context) if state.action else None
+		state_l = data.get('list')
+		basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items()}
+		for kl in keyboard:
+			for button in kl: 
+				if button.callback_data: button.callback_data += len(state_l)
+		list_buttons = [InlineKeyboardButton(b,callback_data=i) for i,b in enumerate(state_l if state.list_all else state.list_buttons)]
+		keyboard = [list_buttons]+keyboard
+		self.list_keyboard = keyboard
+		self.conversation.add_routes(state,basic_routes,default=state)
+		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1): keyboard[0].pop((1,0)[not i])
+		if state.list_all: keyboard[data.get('list_i')//8].pop(data.get('list_i'))
+		return keyboard
+
+	def _build_dynamic_stuff(self,state): 
+		'''Compute dynamic stuff: action > routes > keyboard > list'''
+		data = self.context.user_data.get(self.update.effective_chat.id)
+		if self.prev_state != self.curr_state and data.get('list'): data.pop('list'),data.pop('list_i')
+		if state.list: self._update_dynamic_list(state)
+		action_str = state.action(self.update,self.context) if state.action else None
 		if state.routes: self._build_dynamic_routes(state)
-		if state.build: 
-			keyboard = state.build(self.update,self.context)
-			keyboard,size = keyboard if isinstance(keyboard,tuple) else (keyboard,None)
-			state.add_keyboard(keyboard,size,max_row=state.max_row)
+		if state.build: self._build_dynamic_keyboard(state)
 		keyboard = self._build_keyboard(state)
-		reply_msg = state.msg if ret == None else state.msg.replace('@@@',ret)
-		return keyboard,reply_msg
+		if state.list: keyboard = self._build_dynamic_list(state,keyboard)
+		reply_msg = state.msg if action_str == None else state.msg.replace('@@@',action_str)
+		return InlineKeyboardMarkup(keyboard),reply_msg
 
 	def restart(self):
+		'''Restart handler to initial configuration'''
 		if self.update:
 			telegram_id = self.update.effective_chat.id
 			if (c := self.context.user_data.get(telegram_id)):
@@ -109,10 +134,6 @@ class AutoConvHandler:
 		self.update = update
 		self.context = context
 		telegram_id = self.update.effective_chat.id
-		# restore dynamic list state
-		if self.prev_state and self.prev_state.list and self.curr_state != self.prev_state:
-			self.prev_state.add_keyboard(*self._bkup_state_keyboard)
-			self.conversation.add_routes(self.prev_state,self._bkup_state_routes)
 		# start
 		if not self.context.user_data.get(telegram_id):
 			if delete_first: update.message.delete()

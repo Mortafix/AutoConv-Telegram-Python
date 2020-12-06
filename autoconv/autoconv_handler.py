@@ -101,8 +101,10 @@ class AutoConvHandler:
 		keyboard = [list_buttons]+keyboard
 		self.list_keyboard = keyboard
 		self.conversation.add_routes(state,basic_routes,default=state)
-		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1): keyboard[0].pop((1,0)[not i])
-		if state.list_all: keyboard[data.get('list_i')//8].pop(data.get('list_i'))
+		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1):
+			if len(state_l) < 2: keyboard.pop(0)
+			else: keyboard[0].pop((1,0)[not i])
+		if state.list_all and len(state_l) > 0: keyboard[data.get('list_i')//8].pop(data.get('list_i'))
 		return keyboard
 
 	def _build_dynamic_stuff(self,state): 

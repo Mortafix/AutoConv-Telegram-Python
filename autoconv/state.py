@@ -70,9 +70,9 @@ class State:
 		self.routes = function
 
 	@type_check
-	def add_dynamic_list(self,function:Callable,start:Optional[int]=0,left_button:Optional[str]='<',right_button:Optional[str]='>',all_pages:Optional[bool]=False):
+	def add_dynamic_list(self,function:Callable,start:Optional[int]=0,left_button:Optional[str]='<',right_button:Optional[str]='>',all_elements:Optional[bool]=False):
 		'''Add function to create a list with page'''
 		self.list = function
 		self.list_buttons = [left_button,right_button]
-		self.list_all = all_pages
+		self.list_all = all_elements
 		self.list_start = start

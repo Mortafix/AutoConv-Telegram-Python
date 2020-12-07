@@ -22,7 +22,7 @@ class Conversation:
 		return any([state.name == s.name for s in self.state_list])
 
 	@validate_arguments(config=dict(arbitrary_types_allowed=True))
-	def add_state(self,state:Union[State,list]):
+	def add_states(self,state:Union[State,list]):
 		'''Add state to the conversation'''
 		for s in state:
 			if not self._state_already_exists(s): self.state_list.append(s)

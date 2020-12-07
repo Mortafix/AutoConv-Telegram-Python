@@ -87,7 +87,7 @@ Conversation(start_state:State,end_state:Optional[State]=None)
 
 ```python
 # add states to the conversation
-add_state(state:Union[State,list])
+add_states(state:Union[State,list])
 ```
 - `state`: Add a State or a list of State to the conversation.
 

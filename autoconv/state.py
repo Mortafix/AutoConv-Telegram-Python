@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Callable,Union,Optional,List,Tuple,Mapping,Pattern,ByteString
+from typing import Callable,Union,Optional,Sequence,Mapping
 from pydantic import validate_arguments
 
 class State:
@@ -23,7 +23,7 @@ class State:
 		return f'State <{self.name}>'
 
 	@validate_arguments
-	def add_keyboard(self,keyboard:Union[List[str],Tuple[list],Mapping[int,str]],size:Optional[Tuple[int]]=None,max_row:int=3):
+	def add_keyboard(self,keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequence[int]]=None,max_row:int=3):
 		'''Add inline keyboard handler'''
 		if isinstance(keyboard,list): keyboard = dict(enumerate(keyboard))
 		if size and sum(size) != len(keyboard): raise ValueError(f'Keyboard length ({len(keyboard)}) must be the same size as the sum of row size ({sum(size)}).')

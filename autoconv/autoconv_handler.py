@@ -50,7 +50,7 @@ class AutoConvHandler:
 		if state.text and not self.context.user_data.get(telegram_id).get('error'):
 			keyboard = self._build_keyboard(state)
 			self.context.user_data.get(telegram_id).update({'error':True})
-			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{state.text[1]}",reply_markup=InlineKeyboardMarkup(keyboard),parse_mode=state.mode)
+			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{state.text[1]}",reply_markup=InlineKeyboardMarkup(keyboard),**state.kwargs)
 		return self.NEXT
 
 	def _going_back(self):
@@ -59,7 +59,7 @@ class AutoConvHandler:
 		telegram_id = self.update.callback_query.message.chat.id
 		new_state = self._change_state(telegram_id,'BACK')
 		keyboard = self._build_keyboard(new_state)
-		query.edit_message_text(f"{new_state}",reply_markup=keyboard,parse_mode=new_state.mode)
+		query.edit_message_text(f"{new_state}",reply_markup=keyboard,**state.kwargs)
 		return self.NEXT
 
 	def _update_dynamic_list(self,state):

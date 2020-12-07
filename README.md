@@ -31,7 +31,7 @@ State(state_name:str,state_text:str,data_type:Callable=int,back_button:Optional[
 
 ```python
 # callback handler
-add_keyboard(keyboard:Union[List[str],Tuple[list],Mapping[int,str]],size:Optional[Tuple[int]]=None,max_row:int=3)
+add_keyboard(keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequence[int]]=None,max_row:int=3)
 ```
 - `keyboard`: inline keyboard. Can be a dict (with custom value as key) or a list/tuple (default int value as key).
 - `size`: size for each row of the keyboard.

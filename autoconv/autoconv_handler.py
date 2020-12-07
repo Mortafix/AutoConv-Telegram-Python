@@ -12,13 +12,13 @@ class AutoConvHandler:
 		self.prev_state = None
 		self.curr_state = conversation.start
 		self.update, self.context = None, None
-		self._bkup_state_routes,self._bkup_state_keyboard = None,None
+		self._bkup_state_routes,self._list_keyboard = None,None
 
 	def _build_keyboard(self,state):
 		'''Build Keyboard for callback state'''
 		cmd_list = [[InlineKeyboardButton(text=key_param[0][k],callback_data=k) for k in list(key_param[0].keys())[su:su+si]] for si,su in zip(key_param[1],[sum(key_param[1][:i]) for i in range(len(key_param[1]))])] if (key_param := state.callback) else [[]]
-		if state.back_button and self.conversation.routes.get(state.name).get('BACK'): cmd_list += [[InlineKeyboardButton(text=state.back_button,callback_data='BACK')]]
-		return (state.custom and state.custom(self.update,self.context)) or cmd_list
+		back_button = [[InlineKeyboardButton(text=state.back_button,callback_data='BACK')]] if state.back_button and self.conversation.routes.get(state.name).get('BACK') else []
+		return ((state.custom and state.custom(self.update,self.context)) or cmd_list) + back_button
 
 	def _next_state(self,state,value):
 		'''Follow state ruote'''
@@ -32,7 +32,7 @@ class AutoConvHandler:
 		if state.list and isinstance(data,int):
 			list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
 			if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
-			value = reduce(lambda x,y: x+y,self.list_keyboard)[list_idx].text
+			value = reduce(lambda x,y: x+y,self._list_keyboard)[list_idx].text
 		else: value = d if (c := state.callback) and (d := c[0].get(data)) else data
 		if state != self.conversation.end: self.context.user_data.get(telegram_id).get('data').update({state.name:value})
 		new_state = self._next_state(state,data)
@@ -73,8 +73,8 @@ class AutoConvHandler:
 			state_l = state.list(self.update,self.context)
 			data.update({'list':state_l,'list_i':state.list_start})
 		if self._bkup_state_routes:
-			if 'BACK' in self._bkup_state_routes: self._bkup_state_routes.pop('BACK')
-			self.conversation.add_routes(self.curr_state,self._bkup_state_routes)
+			back_route = self._bkup_state_routes.pop('BACK') if 'BACK' in self._bkup_state_routes else None
+			self.conversation.add_routes(self.curr_state,self._bkup_state_routes,back=back_route)
 			self._bkup_state_routes = None
 
 	def _build_dynamic_routes(self,state):
@@ -99,7 +99,7 @@ class AutoConvHandler:
 				if (c := button.callback_data) and isinstance(c,int): button.callback_data += len(state_l)
 		list_buttons = [InlineKeyboardButton(b,callback_data=i) for i,b in enumerate(state_l if state.list_all else state.list_buttons)]
 		keyboard = [list_buttons]+keyboard
-		self.list_keyboard = keyboard
+		self._list_keyboard = keyboard
 		self.conversation.add_routes(state,basic_routes,default=state,back=self.conversation.routes.get(state.name).get('BACK'))
 		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1):
 			if len(state_l) < 2: keyboard.pop(0)

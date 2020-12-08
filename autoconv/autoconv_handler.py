@@ -38,19 +38,19 @@ class AutoConvHandler:
 		new_state = self._next_state(state,data)
 		self.prev_state,self.curr_state = self.curr_state,new_state
 		data_context.update({'prev_state':self.prev_state.name,'state':new_state.name})
-		if new_state.text: data_context.update({'error':False})
+		if new_state.regex or new_state.handler: data_context.update({'error':False})
 		elif data_context.get('error') != None: data_context.pop('error')
 		return new_state
 
-	def _wrong_text(self):
-		'''Handler for wrong regex in text state'''
+	def _wrong_message(self):
+		'''Handler for wrong message'''
 		telegram_id = self.update.message.chat.id
 		self.update.message.delete()
 		state = self.conversation.get_state(self.context.user_data.get(telegram_id).get('state'))
-		if state.text and not self.context.user_data.get(telegram_id).get('error'):
+		if ((self.update.message.text and state.regex_error_text) or state.handler_error_text) and not self.context.user_data.get(telegram_id).get('error'):
 			keyboard = self._build_keyboard(state)
 			self.context.user_data.get(telegram_id).update({'error':True})
-			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{state.text[1]}",reply_markup=InlineKeyboardMarkup(keyboard),**state.kwargs)
+			self.context.user_data.get(telegram_id).get('bot-msg').edit_text(f"{state.msg}\n\n{(self.update.message.text and state.regex_error_text) or state.handler_error_text}",reply_markup=InlineKeyboardMarkup(keyboard),**state.kwargs)
 		return self.NEXT
 
 	def _going_back(self):
@@ -151,9 +151,9 @@ class AutoConvHandler:
 			data = self.update.callback_query.data
 			to_reply = self.update.callback_query.edit_message_text
 		else:
-			data = self.update.message.text
-			if not state.text: self.update.message.delete(); return self.NEXT
-			if not match(state.text[0],data): return self._wrong_text()
+			data = (state.handler and state.handler(self.update,self.context)) or (state.regex and self.update.message.text)
+			if not state.regex and not state.handler: self.update.message.delete(); return self.NEXT
+			if(state.regex and isinstance(data,str) and not match(state.regex,data)) or (state.handler and not data): return self._wrong_message()
 			to_reply = self.context.user_data.get(telegram_id).get('bot-msg').edit_text
 			self.update.message.delete()
 		# next stage

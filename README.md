@@ -39,7 +39,7 @@ add_keyboard(keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequen
 
 ```python
 # text handler
-add_text(regex:Optional[str]=None,error:Optional[str]=None)
+add_text(regex:str=r'^.*$',error_message:Optional[str]=None)
 ```
 - `regex`: regex for input text.
 - `error_message`: error message when regex fails.
@@ -77,6 +77,13 @@ add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:
 - `start`: starting position in the list.
 - `left_button`,`right_button`: button labels to move in the list.
 - `all_elements`: if you want to have all the elements in the list as buttons.
+
+```python
+# custom handler
+add_custom_handler(handler:Callable,error_message:Optional[str]=None)
+```
+- `handler`: function must have two parameters (`update` and `context`). It must return an hashable value used to get to next state (by routes) or None if the handler fails.
+- `error_message`: error message when handler fails.
 
 ### Conversation
 ```python

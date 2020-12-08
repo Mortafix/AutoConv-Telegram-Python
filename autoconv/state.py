@@ -12,12 +12,13 @@ class State:
 		self.back_button = back_button
 		self.kwargs = kwargs
 		self.callback = None
-		self.text = None
+		self.regex,self.regex_error_text = None,None
 		self.action = None
 		self.build,self.max_row = None,None
 		self.custom = None
 		self.routes = None
 		self.list,self.list_all,self.list_start = None,None,None
+		self.handler,self.handler_error_text = None,None
 	
 	def __str__(self):
 		return f'State <{self.name}>'
@@ -33,10 +34,10 @@ class State:
 		self.callback = (keyboard,tuple(size))
 
 	@validate_arguments
-	def add_text(self,regex:Optional[str]=None,error:Optional[str]=None):
+	def add_text(self,regex:str=r'^.*$',error_message:Optional[str]=None):
 		'''Add text input handler'''
-		if not regex: regex = r'^.*$' 
-		self.text = (regex,error)
+		self.regex = regex
+		self.regex_error_text = error_message
 
 	@validate_arguments
 	def add_action(self,function:Callable):
@@ -66,3 +67,9 @@ class State:
 		self.list_buttons = [left_button,right_button]
 		self.list_all = all_elements
 		self.list_start = start
+
+	@validate_arguments
+	def add_custom_handler(self,handler:Callable,error_message:Optional[str]=None):
+		'''Add function handler to handle a non-text message | must return an hashable value used to get to next state (by routes)'''
+		self.handler = handler
+		self.handler_error_text = error_message

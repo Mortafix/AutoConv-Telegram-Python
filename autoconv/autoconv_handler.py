@@ -2,14 +2,16 @@ from autoconv.conversation import Conversation
 from autoconv.telegram_data import TelegramData
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler
+from telegram.error import BadRequest
 from re import match
 from functools import reduce
 
 class AutoConvHandler:
 
-	def __init__(self,conversation,telegram_state_name):
+	def __init__(self,conversation,telegram_state_name,fallback_state=None):
 		self.conversation = conversation
 		self.NEXT = telegram_state_name
+		self.error_state = fallback_state
 		self.tData = TelegramData()
 		self.prev_state = None
 		self.curr_state = conversation.start
@@ -26,17 +28,20 @@ class AutoConvHandler:
 		if value not in self.conversation.routes.get(state.name) and -1 not in self.conversation.routes.get(state.name): raise ValueError(f'Deafult route not found and value {value} doesn\'t exist as route of {state}.') 
 		return self.conversation.routes.get(state.name).get(value) if value in self.conversation.routes.get(state.name) else self.conversation.routes.get(state.name).get(-1)
 
-	def _change_state(self,telegram_id,data):
+	def _change_state(self,data,state=None):
 		'''Set variables for next state'''
+		telegram_id = self.tData.update.effective_chat.id
 		data_context = self.tData.context.user_data.get(telegram_id)
-		state = self.conversation.get_state(self.tData.context.user_data.get(telegram_id).get('state'))
-		if state.list and isinstance(data,int):
-			list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
-			if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
-			value = reduce(lambda x,y: x+y,self._list_keyboard)[list_idx].text
-		else: value = d if (c := state.callback) and (d := c[0].get(data)) else data
-		if state != self.conversation.end: self.tData.context.user_data.get(telegram_id).get('data').update({state.name:value})
-		new_state = self._next_state(state,data)
+		if not state:
+			state = self.conversation.get_state(self.tData.context.user_data.get(telegram_id).get('state'))
+			if state.list and isinstance(data,int):
+				list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
+				if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
+				value = reduce(lambda x,y: x+y,self._list_keyboard)[list_idx].text
+			else: value = d if (c := state.callback) and (d := c[0].get(data)) else data
+			if state != self.conversation.end: self.tData.context.user_data.get(telegram_id).get('data').update({state.name:value})
+			new_state = self._next_state(state,data)
+		else: new_state = state
 		self.prev_state,self.curr_state = self.curr_state,new_state
 		data_context.update({'prev_state':self.prev_state.name,'state':new_state.name})
 		if new_state.regex or new_state.handler: data_context.update({'error':False})
@@ -57,8 +62,7 @@ class AutoConvHandler:
 	def _going_back(self):
 		'''Handler for back button'''
 		query = self.tData.update.callback_query
-		telegram_id = self.tData.update.callback_query.message.chat.id
-		new_state = self._change_state(telegram_id,'BACK')
+		new_state = self._change_state('BACK')
 		keyboard = self._build_keyboard(new_state)
 		query.edit_message_text(f"{new_state}",reply_markup=keyboard,**state.kwargs)
 		return self.NEXT
@@ -121,6 +125,18 @@ class AutoConvHandler:
 		reply_msg = state.msg if action_str == None else state.msg.replace('@@@',action_str)
 		return InlineKeyboardMarkup(keyboard),reply_msg
 
+	def force_state(self,state):
+		'''Force a state in the conversation'''
+		if self.tData.update and state in self.conversation.state_list:
+			m = self.tData.context.user_data.get(self.tData.update.effective_chat.id).get('bot-msg')
+			keyboard,reply_msg = self._build_dynamic_stuff(state)
+			try:
+				state = self._change_state(None,state=state)
+				m.edit_text(text=f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
+			except BadRequest as e: 
+				if not match('Message is not modified',str(e)): raise e
+			return self.NEXT
+
 	def restart(self):
 		'''Restart handler to initial configuration'''
 		if self.tData.update:
@@ -134,32 +150,38 @@ class AutoConvHandler:
 
 	def manage_conversation(self,update,context,delete_first=True):
 		'''Master function for converastion'''
-		self.tData.update_telegram_data(update,context)
-		telegram_id = self.tData.update.effective_chat.id
-		# start
-		if not self.tData.context.user_data.get(telegram_id):
-			if delete_first: update.message.delete()
-			state = self.conversation.start
-			self.tData.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
+		try:
+			self.tData.update_telegram_data(update,context)
+			telegram_id = self.tData.update.effective_chat.id
+			# start
+			if not self.tData.context.user_data.get(telegram_id):
+				if delete_first: update.message.delete()
+				state = self.conversation.start
+				self.tData.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
+				keyboard,reply_msg = self._build_dynamic_stuff(state)
+				msg = self.tData.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
+				self.tData.context.user_data.get(telegram_id).update({'bot-msg':msg})
+				return self.NEXT
+			# get data
+			state = self.conversation.get_state(self.tData.context.user_data.get(telegram_id).get('state'))
+			if self.tData.update.callback_query:
+				data = self.tData.update.callback_query.data
+				to_reply = self.tData.update.callback_query.edit_message_text
+			else:
+				data = (state.handler and state.handler(self.tData.prepare())) or (state.regex and self.tData.update.message.text)
+				if not state.regex and not state.handler: self.tData.update.message.delete(); return self.NEXT
+				if(state.regex and isinstance(data,str) and not match(state.regex,data)) or (state.handler and not data): return self._wrong_message()
+				to_reply = self.tData.context.user_data.get(telegram_id).get('bot-msg').edit_text
+				self.tData.update.message.delete()
+			# next stage
+			typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
+			state = self._change_state(typed_data)
 			keyboard,reply_msg = self._build_dynamic_stuff(state)
-			msg = self.tData.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
-			self.tData.context.user_data.get(telegram_id).update({'bot-msg':msg})
+			to_reply(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
+			if state == self.conversation.end: self.tData.context.user_data.pop(telegram_id); return ConversationHandler.END
 			return self.NEXT
-		# get data
-		state = self.conversation.get_state(self.tData.context.user_data.get(telegram_id).get('state'))
-		if self.tData.update.callback_query:
-			data = self.tData.update.callback_query.data
-			to_reply = self.tData.update.callback_query.edit_message_text
-		else:
-			data = (state.handler and state.handler(self.tData.prepare())) or (state.regex and self.tData.update.message.text)
-			if not state.regex and not state.handler: self.tData.update.message.delete(); return self.NEXT
-			if(state.regex and isinstance(data,str) and not match(state.regex,data)) or (state.handler and not data): return self._wrong_message()
-			to_reply = self.tData.context.user_data.get(telegram_id).get('bot-msg').edit_text
-			self.tData.update.message.delete()
-		# next stage
-		typed_data = state.data_type(data) if data != 'BACK' else 'BACK'
-		state = self._change_state(telegram_id,typed_data)
-		keyboard,reply_msg = self._build_dynamic_stuff(state)
-		to_reply(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
-		if state == self.conversation.end: self.tData.context.user_data.pop(telegram_id); return ConversationHandler.END
-		return self.NEXT
+		except (Exception,BadRequest) as e:
+			self.tData.context.user_data.get(self.tData.update.effective_chat.id).update({'exception':e})
+			if not match('Message is not modified',str(e)):
+				if self.error_state: return self.force_state(self.error_state)
+				raise e

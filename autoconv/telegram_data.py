@@ -6,6 +6,8 @@ class TelegramData:
 		self.telegram_id = None
 		self.user_data = None
 		self.states_data = None
+		self.message = None
+		self.exception = None
 
 	def __str__(self):
 		return f"UPDATE {self.update}\nCONTEXT {self.context}\nTELEGRAM ID {self.telegram_id}\nUSER DATA {self.user_data}\nSTATES DATA {self.states_data}"

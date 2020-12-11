@@ -23,7 +23,7 @@ But here, you can find a little documentation.
 ```python
 State(state_name:str,state_text:str,data_type:Callable=int,back_button:Optional[str]=None,**kwargs)
 ```
-- `state_name`: State name (and key for data dictionary).
+- `state_name`: state name (and key for data dictionary).
 - `state_text`: message you want to print in that state.
 - `data_type`: data type, default or custom.
 - `back_button`: text for back button.
@@ -87,25 +87,26 @@ add_custom_handler(handler:Callable,error_message:Optional[str]=None)
 
 ### Conversation
 ```python
-Conversation(start_state:State,end_state:Optional[State]=None)
+Conversation(start_state:State,end_state:Optional[State]=None,fallback_state:Optional[State]=None)
 ```
-- `start_state`: first State of the conversation.
-- `end_state`: final State of the conversation.
+- `start_state`: first state of the conversation.
+- `end_state`: final state of the conversation.
+- `fallback_state`: fallback handler state of the conversation (if defined, the conversation handle an error in this state).
 
 ```python
-# add states to the conversation
-add_states(state:Union[State,list])
-```
-- `state`: Add a State or a list of State to the conversation.
-
-```python
-# define the routes for a state in the conversation
+# define the routes for a state in the conversation (automatically added to conversation)
 add_routes(state:State,routes:Optional[dict]=None,default:Optional[State]=None,back:Optional[State]=None)
 ```
-- `state`: initial State of the ruote.
+- `state`: initial state of the ruote.
 - `routes`: routes where a state should go for every possibile data received.
 - `default`: default route if value isn't in ruotes.
 - `back`: route to go when the back button is pressed, if exists.
+
+```python
+# add extra states to the conversation
+add_states(states:Union[Sequence[State],State])
+```
+- `state`: Add a state or a list/set of state to the conversation.
 
 ```python
 # get a states by name in the conversation
@@ -125,9 +126,15 @@ AutoConvHandler(conversation:Conversation,telegram_state_name:Any)
 manage_conversation(update:Telegram.Update,context:Telegram.Context,delete_first:bool=True)
 ```
 - `update`,`context`: from telegram bot function.
-- `delete_first`: if you want to delete the user message to start the conversation.
+- `delete_first`: if you want to delete the user message that trigger this handler.
 
 ```python
 # restart the conversation to initial configuration
 restart()
 ```
+
+```python
+# restart the conversation to initial configuration
+force_state(state:State)
+```
+- `state`: force the conversation to this state.

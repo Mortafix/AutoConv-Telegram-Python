@@ -8,10 +8,9 @@ from functools import reduce
 
 class AutoConvHandler:
 
-	def __init__(self,conversation,telegram_state_name,fallback_state=None):
+	def __init__(self,conversation,telegram_state_name):
 		self.conversation = conversation
 		self.NEXT = telegram_state_name
-		self.error_state = fallback_state
 		self.tData = TelegramData()
 		self.prev_state = None
 		self.curr_state = conversation.start
@@ -134,6 +133,7 @@ class AutoConvHandler:
 				state = self._change_state(None,state=state)
 				m.edit_text(text=f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
 			except BadRequest as e: 
+				self.tData.exception = e
 				if not match('Message is not modified',str(e)): raise e
 			return self.NEXT
 
@@ -148,7 +148,7 @@ class AutoConvHandler:
 			self.curr_state = self.conversation.start
 		return self
 
-	def manage_conversation(self,update,context,delete_first=True):
+	def manage_conversation(self,update,context,delete_first=False):
 		'''Master function for converastion'''
 		try:
 			self.tData.update_telegram_data(update,context)
@@ -181,7 +181,7 @@ class AutoConvHandler:
 			if state == self.conversation.end: self.tData.context.user_data.pop(telegram_id); return ConversationHandler.END
 			return self.NEXT
 		except (Exception,BadRequest) as e:
-			self.tData.context.user_data.get(self.tData.update.effective_chat.id).update({'exception':e})
+			self.tData.exception = e
 			if not match('Message is not modified',str(e)):
-				if self.error_state: return self.force_state(self.error_state)
+				if self.conversation.fallback_state: return self.force_state(self.conversation.fallback_state)
 				raise e

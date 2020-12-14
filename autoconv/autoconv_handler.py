@@ -37,7 +37,7 @@ class AutoConvHandler:
 				list_idx = data if state.list_all or data < 2 else data - len(data_context.get('list'))+2 - (0,1)[data_context.get('list_i') in (0,len(data_context.get('list'))-1)]
 				if state.list_all: list_idx = data if data_context.get('list_i') > data else data-1
 				value = reduce(lambda x,y: x+y,self._list_keyboard)[list_idx].text
-			else: value = d if (c := state.callback) and (d := c[0].get(data)) else data
+			else: value = d if (c := state.callback) and (d := c[0].get(data if not isinstance(data,int) and not data.isdigit() else int(data))) else data
 			if state != self.conversation.end: self.tData.context.user_data.get(telegram_id).get('data').update({state.name:value})
 			new_state = self._next_state(state,data)
 		else: new_state = state

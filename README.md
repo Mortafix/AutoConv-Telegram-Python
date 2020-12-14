@@ -103,12 +103,6 @@ add_routes(state:State,routes:Optional[dict]=None,default:Optional[State]=None,b
 - `back`: route to go when the back button is pressed, if exists.
 
 ```python
-# add extra states to the conversation
-add_states(states:Union[Sequence[State],State])
-```
-- `state`: Add a state or a list/set of state to the conversation.
-
-```python
 # get a states by name in the conversation
 get_state(state_name:str)
 ```
@@ -134,7 +128,15 @@ restart()
 ```
 
 ```python
-# restart the conversation to initial configuration
+# force a state in the conversation
 force_state(state:State)
 ```
 - `state`: force the conversation to this state.
+
+### TelegramData Attributes
+- `update`,`context`: Telegram update and context.
+- `telegram_id`: Telegram ID of the user.
+- `user_data`: `context.user_data` of the user.
+- `states_data`: data for every state of the user.
+- `message`: message info, if possibile, of the user.
+- `exception`: last Python exception occurred.

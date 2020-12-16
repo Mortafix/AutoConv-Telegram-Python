@@ -129,9 +129,9 @@ class AutoConvHandler:
 		if isinstance(state,str): state = self.conversation.get_state(state)
 		if self.tData.update and state in self.conversation.state_list:
 			m = self.tData.context.user_data.get(self.tData.update.effective_chat.id).get('bot-msg')
-			keyboard,reply_msg = self._build_dynamic_stuff(state)
 			try:
 				state = self._change_state(None,state=state)
+				keyboard,reply_msg = self._build_dynamic_stuff(state)
 				m.edit_text(text=f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
 			except BadRequest as e: 
 				self.tData.exception = e

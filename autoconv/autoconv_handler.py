@@ -126,6 +126,7 @@ class AutoConvHandler:
 
 	def force_state(self,state):
 		'''Force a state in the conversation'''
+		if isinstance(state,str): state = self.conversation.get_state(state)
 		if self.tData.update and state in self.conversation.state_list:
 			m = self.tData.context.user_data.get(self.tData.update.effective_chat.id).get('bot-msg')
 			keyboard,reply_msg = self._build_dynamic_stuff(state)

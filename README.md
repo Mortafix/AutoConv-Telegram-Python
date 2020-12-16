@@ -48,32 +48,32 @@ add_text(regex:str=r'^.*$',error_message:Optional[str]=None)
 # function to execute in this state
 add_action(function:Callable)
 ```
-- `function`: function must have two parameters (`update` and `context`). It can return a `str`, repleacing 3 `@` (`@@@`) in the message. Called when its state is reached.
+- `function`: function must take one parameter (`TelegramData` object). It can return a `str`, repleacing 3 `@` (`@@@`) in the message. Called when its state is reached.
 
 ```python
 # function to create dynamic keyboard
 add_dynamic_keyboard(function:Callable,max_row:int=3)
 ```
-- `function`: function must have two parameters (`update` and `context`). It must return a keyboard. Called when its state is reached.
+- `function`: function must take one parameter (`TelegramData` object). It must return a keyboard. Called when its state is reached.
 - `max_row`: total values in a row, as non dynamic method.
 
 ```python
 # function to create custom keyboard
 add_custom_keyboard(function:Callable)
 ```
-- `function`: function must have two parameters (`update` and `context`). It must return a list of _InlineKeyboardButton_. Called when its state is reached and it override the dynamic keyboard.
+- `function`: function must take one parameter (`TelegramData` object). It must return a list of _InlineKeyboardButton_. Called when its state is reached and it override the dynamic keyboard.
 
 ```python
 # function to create dynamic routes
 add_dynamic_routes(function:Callable)
 ```
-- `function`: function must have two parameters (`update` and `context`). It must return a triplet (routes,default,back) [see _Conversation.add_routes()_ to better understanding]. Suggested to use in combo with _dynamic_keyboard_. Called when its state is reached.
+- `function`: function must take one parameter (`TelegramData` object). It must return a triplet (routes,default,back) [see _Conversation.add_routes()_ to better understanding]. Suggested to use in combo with _dynamic_keyboard_. Called when its state is reached.
 
 ```python
 # function to create dynamic list
 add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False)
 ```
-- `function`: function must have two parameters (`update` and `context`). It must return a list of element. Called when its state is reached.
+- `function`: function must take one parameter (`TelegramData` object). It must return a list of element. Called when its state is reached.
 - `start`: starting position in the list.
 - `left_button`,`right_button`: button labels to move in the list.
 - `all_elements`: if you want to have all the elements in the list as buttons.
@@ -82,7 +82,7 @@ add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:
 # custom handler
 add_custom_handler(handler:Callable,error_message:Optional[str]=None)
 ```
-- `handler`: function must have two parameters (`update` and `context`). It must return an hashable value used to get to next state (by routes) or None if the handler fails.
+- `handler`: function must take one parameter (`TelegramData` object). It must return an hashable value used to get to next state (by routes) or None if the handler fails.
 - `error_message`: error message when handler fails.
 
 ### Conversation
@@ -129,9 +129,9 @@ restart()
 
 ```python
 # force a state in the conversation
-force_state(state:State)
+force_state(state:Union[State,str])
 ```
-- `state`: force the conversation to this state.
+- `state`: force the conversation to a specific state.
 
 ### TelegramData Attributes
 - `update`,`context`: Telegram update and context.

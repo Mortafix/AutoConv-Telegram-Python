@@ -143,7 +143,9 @@ class AutoConvHandler:
 		if self.tData.update:
 			telegram_id = self.tData.update.effective_chat.id
 			if (c := self.tData.context.user_data.get(telegram_id)):
-				if (m := c.get('bot-msg')): m.delete()
+				if (m := c.get('bot-msg')): 
+					try: m.delete()
+					except BadRequest: pass
 				self.tData.context.user_data.pop(telegram_id)
 			self.prev_state = None
 			self.curr_state = self.conversation.start

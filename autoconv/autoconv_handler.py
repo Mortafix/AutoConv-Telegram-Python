@@ -5,6 +5,7 @@ from telegram.ext import ConversationHandler
 from telegram.error import BadRequest
 from re import match
 from functools import reduce
+from math import ceil
 
 class AutoConvHandler:
 
@@ -101,14 +102,14 @@ class AutoConvHandler:
 		for kl in keyboard:
 			for button in kl: 
 				if (c := button.callback_data) and isinstance(c,int): button.callback_data += len(state_l)
-		list_buttons = [InlineKeyboardButton(b,callback_data=i) for i,b in enumerate(state_l if state.list_all else state.list_buttons)]
-		keyboard = [list_buttons]+keyboard
+		list_buttons = [[InlineKeyboardButton(b,callback_data=r*state.list_max_row+i) for i,b in enumerate(state_l[r*state.list_max_row:r*state.list_max_row+state.list_max_row] if state.list_all else state.list_buttons)] for r in range(ceil((len(state_l) if state.list_all else 1)/state.list_max_row))]
+		keyboard = list_buttons+keyboard
 		self._list_keyboard = keyboard
 		self.conversation.add_routes(state,basic_routes,default=state,back=self.conversation.routes.get(state.name).get('BACK'))
 		if not state.list_all and (i := data.get('list_i')) in (0,len(state_l)-1):
 			if len(state_l) < 2: keyboard.pop(0)
 			else: keyboard[0].pop((1,0)[not i])
-		if state.list_all and len(state_l) > 0: keyboard[data.get('list_i')//8].pop(data.get('list_i'))
+		if state.list_all and len(state_l) > 0: keyboard[data.get('list_i')//state.list_max_row].pop(data.get('list_i')%state.list_max_row)
 		return keyboard
 
 	def _build_dynamic_stuff(self,state): 

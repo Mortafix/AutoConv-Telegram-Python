@@ -35,7 +35,7 @@ add_keyboard(keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequen
 ```
 - `keyboard`: inline keyboard. Can be a dict (with custom value as key) or a list/tuple (default int value as key).
 - `size`: size for each row of the keyboard.
-- `max_row`: total values in a row, ignored if size is specified.
+- `max_row`: max number of buttons in a row, ignored if size is specified.
 
 ```python
 # text handler
@@ -55,7 +55,7 @@ add_action(function:Callable)
 add_dynamic_keyboard(function:Callable,max_row:int=3)
 ```
 - `function`: function must take one parameter (`TelegramData` object). It must return a keyboard. Called when its state is reached.
-- `max_row`: total values in a row, as non dynamic method.
+- `max_row`: max number of buttons in a row.
 
 ```python
 # function to create custom keyboard
@@ -71,12 +71,13 @@ add_dynamic_routes(function:Callable)
 
 ```python
 # function to create dynamic list
-add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False)
+add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False,max_row:int=4)
 ```
 - `function`: function must take one parameter (`TelegramData` object). It must return a list of element. Called when its state is reached.
 - `start`: starting position in the list.
 - `left_button`,`right_button`: button labels to move in the list.
 - `all_elements`: if you want to have all the elements in the list as buttons.
+- `max_row`: max number of buttons in a row.
 
 ```python
 # custom handler

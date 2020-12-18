@@ -17,7 +17,7 @@ class State:
 		self.build,self.max_row = None,None
 		self.custom = None
 		self.routes = None
-		self.list,self.list_all,self.list_start = None,None,None
+		self.list,self.list_all,self.list_buttons,self.list_start,self.list_max_row = None,None,None,None,None
 		self.handler,self.handler_error_text = None,None
 	
 	def __str__(self):
@@ -61,12 +61,13 @@ class State:
 		self.routes = function
 
 	@validate_arguments
-	def add_dynamic_list(self,function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False):
+	def add_dynamic_list(self,function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False,max_row:int=4):
 		'''Add function to create a dynamic list with pages'''
 		self.list = function
 		self.list_buttons = [left_button,right_button]
 		self.list_all = all_elements
 		self.list_start = start
+		self.list_max_row = max_row
 
 	@validate_arguments
 	def add_custom_handler(self,handler:Callable,error_message:Optional[str]=None):

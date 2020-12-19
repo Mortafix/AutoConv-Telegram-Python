@@ -98,7 +98,7 @@ class AutoConvHandler:
 		self._bkup_state_routes = self.conversation.routes.get(state.name)
 		data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
 		state_l = data.get('list')
-		basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items() if k != 'BACK'}
+		basic_routes = {k+len(state_l):v for k,v in self.conversation.routes.get(state.name).items() if k not in ('BACK',-1)}
 		for kl in keyboard:
 			for button in kl: 
 				if (c := button.callback_data) and isinstance(c,int): button.callback_data += len(state_l)
@@ -115,7 +115,7 @@ class AutoConvHandler:
 	def _build_dynamic_stuff(self,state): 
 		'''Compute dynamic stuff: action > routes > keyboard > list'''
 		data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
-		if self.prev_state != self.curr_state and data.get('list'): data.pop('list'),data.pop('list_i')
+		if self.prev_state != self.curr_state and data.get('list'): data.pop('list'),data.pop('list_i'); self._bkup_state_routes = None
 		if state.list: self._update_dynamic_list(state)
 		action_str = state.action(self.tData.prepare()) if state.action else None
 		if state.routes: self._build_dynamic_routes(state)

@@ -43,6 +43,11 @@ class AutoConvHandler:
 		data_context.update({'prev_state':self.prev_state.name,'state':new_state.name})
 		if new_state.regex or new_state.handler: data_context.update({'error':False})
 		elif data_context.get('error') != None: data_context.pop('error')
+		if self._bkup_state_routes:
+			back_route = self._bkup_state_routes.pop('BACK') if 'BACK' in self._bkup_state_routes else None
+			default_route = self._bkup_state_routes.pop(-1) if -1 in self._bkup_state_routes else None
+			self.conversation.add_routes(self.prev_state,self._bkup_state_routes,default=default_route,back=back_route)
+		self._bkup_state_routes = None
 		return new_state
 
 	def _wrong_message(self):
@@ -74,11 +79,6 @@ class AutoConvHandler:
 		else:
 			state_l = state.list(self.tData.prepare())
 			data.update({'list':state_l,'list_i':state.list_start})
-		if self._bkup_state_routes:
-			back_route = self._bkup_state_routes.pop('BACK') if 'BACK' in self._bkup_state_routes else None
-			default_route = self._bkup_state_routes.pop(-1) if -1 in self._bkup_state_routes else None
-			self.conversation.add_routes(self.curr_state,self._bkup_state_routes,default=default_route,back=back_route)
-		self._bkup_state_routes = None
 
 	def _build_dynamic_routes(self,state):
 		'''Build dynamic routes for current state'''

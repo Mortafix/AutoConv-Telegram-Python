@@ -35,7 +35,7 @@ class AutoConvHandler:
 		if not state:
 			state = self.conversation.get_state(self.tData.context.user_data.get(telegram_id).get('state'))
 			if state.list and isinstance(data,int): value = [b for b in reduce(lambda x,y: x+y,self._list_keyboard) if b.callback_data != None and b.callback_data == data][0].text
-			else: value = d if (c := state.callback) and (d := c[0].get(data if not isinstance(data,int) and not data.isdigit() else int(data))) else data
+			else: value = d if (c := state.callback) and (d := c[0].get(data if not isinstance(data,int) and not str(data).isdigit() else int(data))) else data
 			if state != self.conversation.end: self.tData.context.user_data.get(telegram_id).get('data').update({state.name:value})
 			new_state = self._next_state(state,data)
 		else: new_state = state

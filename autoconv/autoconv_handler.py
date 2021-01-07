@@ -74,7 +74,9 @@ class AutoConvHandler:
 		data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
 		if (state_l := data.get('list')):
 			i = int(data.get('list_i'))
-			new_i = state_l.index(data.get('data').get(state.name)) if state.list_all else (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1] or not i]
+			if state.list_all: new_i = state_l.index(data.get('data').get(state.name))
+			elif not state.list_all and data.get('data').get(state.name) not in state.list_buttons: new_i = i
+			else: new_i = (i-1,i+1)[data.get('data').get(state.name) == state.list_buttons[1]]
 			data.update({'list_i':new_i})
 		else:
 			state_l = state.list(self.tData.prepare())

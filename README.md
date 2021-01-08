@@ -109,6 +109,13 @@ get_state(state_name:str)
 ```
 - `state_name`: a state name to search in the conversation.
 
+```python
+# define a list of users able to access this conversation and an optional fallback State
+add_authorized_users(users_list:Sequence[int],no_auth_state:State)
+```
+- `users_list`: list of users (Telegram ID) able to access the conversation.
+- `no_auth_state`: state in which unauthorized users end up.
+
 ### AutoConvHandler
 ```python
 AutoConvHandler(conversation:Conversation,telegram_state_name:Any)

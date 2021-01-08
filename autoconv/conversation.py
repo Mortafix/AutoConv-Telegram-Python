@@ -48,3 +48,9 @@ class Conversation:
 		for state in self.state_list:
 			if state.name == state_name: return state
 		return None
+
+	@validate_arguments(config=dict(arbitrary_types_allowed=True))
+	def add_authorized_users(self,users_list:Sequence[int],no_auth_state:Optional[State]=None):
+		'''Define a list of users able to access this conversation and an optional fallback State'''
+		self.no_auth_state = no_auth_state
+		self.users_list = users_list

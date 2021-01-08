@@ -125,15 +125,25 @@ class AutoConvHandler:
 		reply_msg = state.msg if action_str == None else state.msg.replace('@@@',action_str)
 		return InlineKeyboardMarkup(keyboard),reply_msg
 
+	def _init_context(self,state):
+		'''Initializate user data in context'''
+		telegram_id = self.tData.update.effective_chat.id
+		if not (udata := self.tData.context.user_data).get(telegram_id):
+			self.tData.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
+
 	def force_state(self,state):
 		'''Force a state in the conversation'''
 		if isinstance(state,str): state = self.conversation.get_state(state)
 		if self.tData.update and state in self.conversation.state_list:
-			m = self.tData.context.user_data.get(self.tData.update.effective_chat.id).get('bot-msg')
+			telegram_id = self.tData.update.effective_chat.id
+			self._init_context(state)
+			if not (udata := self.tData.context.user_data.get(telegram_id)).get('bot-msg'): send_msg = self.tData.update.message.reply_text
+			else: send_msg = udata.get('bot-msg').edit_text
 			try:
 				state = self._change_state(None,state=state)
 				keyboard,reply_msg = self._build_dynamic_stuff(state)
-				m.edit_text(text=f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
+				m = send_msg(text=f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
+				self.tData.context.user_data.get(telegram_id).update({'bot-msg':m})
 			except BadRequest as e: 
 				self.tData.exception = e
 				if not match('Message is not modified',str(e)): raise e
@@ -157,11 +167,16 @@ class AutoConvHandler:
 		try:
 			self.tData.update_telegram_data(update,context)
 			telegram_id = self.tData.update.effective_chat.id
+			# check authorization
+			if self.conversation.users_list and telegram_id not in self.conversation.users_list:
+				if (fbs := self.conversation.no_auth_state):
+					return self.force_state(fbs)
+				return self.NEXT
 			# start
 			if not self.tData.context.user_data.get(telegram_id):
 				if delete_first: update.message.delete()
 				state = self.conversation.start
-				self.tData.context.user_data.update({telegram_id:{'prev_state':None,'state':state.name,'error':False,'data':{}}})
+				self._init_context(state)
 				keyboard,reply_msg = self._build_dynamic_stuff(state)
 				msg = self.tData.update.message.reply_text(f'{reply_msg}',reply_markup=keyboard,**state.kwargs)
 				self.tData.context.user_data.get(telegram_id).update({'bot-msg':msg})

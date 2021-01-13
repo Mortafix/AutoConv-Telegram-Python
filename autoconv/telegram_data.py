@@ -23,7 +23,7 @@ class TelegramData:
 
     def prepare(self):
         self.telegram_id = self.update.effective_chat.id
-        self.user_data = self.context.user_data.get(self.telegram_id)
-        self.states_data = self.user_data.get("data") if self.user_data else None
+        self.udata = self.context.user_data
+        self.sdata = self.udata.get("data") if self.udata else None
         self.message = self.update.message
         return self

@@ -60,11 +60,10 @@ class AutoConvHandler:
 
     def _change_state(self, data, state=None):
         """Set variables for next state"""
-        telegram_id = self.tData.update.effective_chat.id
-        data_context = self.tData.context.user_data.get(telegram_id)
+        data_context = self.tData.context.user_data
         if not state:
             state = self.conversation.get_state(
-                self.tData.context.user_data.get(telegram_id).get("state")
+                self.tData.context.user_data.get("state")
             )
             if state.list and isinstance(data, int):
                 value = [
@@ -86,9 +85,7 @@ class AutoConvHandler:
                     else data
                 )
             if state != self.conversation.end:
-                self.tData.context.user_data.get(telegram_id).get("data").update(
-                    {state.name: value}
-                )
+                self.tData.context.user_data.get("data").update({state.name: value})
             new_state = self._next_state(state, data)
         else:
             new_state = state
@@ -122,18 +119,15 @@ class AutoConvHandler:
 
     def _wrong_message(self):
         """Handler for wrong message"""
-        telegram_id = self.tData.update.message.chat.id
         self.tData.update.message.delete()
-        state = self.conversation.get_state(
-            self.tData.context.user_data.get(telegram_id).get("state")
-        )
+        state = self.conversation.get_state(self.tData.context.user_data.get("state"))
         if (
             (self.tData.update.message.text and state.regex_error_text)
             or state.handler_error_text
-        ) and not self.tData.context.user_data.get(telegram_id).get("error"):
+        ) and not self.tData.context.user_data.get("error"):
             keyboard = self._build_keyboard(state)
-            self.tData.context.user_data.get(telegram_id).update({"error": True})
-            self.tData.context.user_data.get(telegram_id).get("bot-msg").edit_text(
+            self.tData.context.user_data.update({"error": True})
+            self.tData.context.user_data.get("bot-msg").edit_text(
                 f"{state.msg}\n\n"
                 + (
                     (self.tData.update.message.text and state.regex_error_text)
@@ -146,7 +140,7 @@ class AutoConvHandler:
 
     def _update_dynamic_list(self, state):
         """Update i and routes backup for dynamic list"""
-        data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
+        data = self.tData.context.user_data
         if (state_l := data.get("list")) :
             i = int(data.get("list_i"))
             if state.list_all:
@@ -168,7 +162,7 @@ class AutoConvHandler:
     def _build_dynamic_list(self, state, keyboard):
         """Build dynamic list for current state"""
         self._bkup_state_routes = self.conversation.routes.get(state.name)
-        data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
+        data = self.tData.context.user_data
         state_l = data.get("list")
         basic_routes = {
             k + len(state_l): v
@@ -177,7 +171,7 @@ class AutoConvHandler:
         }
         for kl in keyboard:
             for button in kl:
-                if (c := button.callback_data) != None and isinstance(c, int):
+                if (c := button.callback_data) is not None and isinstance(c, int):
                     button.callback_data += len(state_l)
         list_buttons = [
             [
@@ -227,7 +221,7 @@ class AutoConvHandler:
 
     def _build_dynamic_stuff(self, state):
         """Compute dynamic stuff: action > routes > keyboard > list"""
-        data = self.tData.context.user_data.get(self.tData.update.effective_chat.id)
+        data = self.tData.context.user_data
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list"), data.pop("list_i")
         if state.list:
@@ -248,16 +242,13 @@ class AutoConvHandler:
 
     def _init_context(self, state):
         """Initializate user data in context"""
-        telegram_id = self.tData.update.effective_chat.id
-        if not self.tData.context.user_data.get(telegram_id):
+        if not self.tData.context.user_data:
             self.tData.context.user_data.update(
                 {
-                    telegram_id: {
-                        "prev_state": None,
-                        "state": state.name,
-                        "error": False,
-                        "data": {},
-                    }
+                    "prev_state": None,
+                    "state": state.name,
+                    "error": False,
+                    "data": {},
                 }
             )
 
@@ -266,11 +257,8 @@ class AutoConvHandler:
         if isinstance(state, str):
             state = self.conversation.get_state(state)
         if self.tData.update and state in self.conversation.state_list:
-            telegram_id = self.tData.update.effective_chat.id
             self._init_context(state)
-            if not (udata := self.tData.context.user_data.get(telegram_id)).get(
-                "bot-msg"
-            ):
+            if not (udata := self.tData.context.user_data).get("bot-msg"):
                 send_msg = self.tData.update.message.reply_text
             else:
                 send_msg = udata.get("bot-msg").edit_text
@@ -278,7 +266,7 @@ class AutoConvHandler:
                 state = self._change_state(None, state=state)
                 keyboard, reply_msg = self._build_dynamic_stuff(state)
                 m = send_msg(text=f"{reply_msg}", reply_markup=keyboard, **state.kwargs)
-                self.tData.context.user_data.get(telegram_id).update({"bot-msg": m})
+                self.tData.context.user_data.update({"bot-msg": m})
             except BadRequest as e:
                 self.tData.exception = e
                 if not match("Message is not modified", str(e)):
@@ -288,14 +276,13 @@ class AutoConvHandler:
     def restart(self):
         """Restart handler to initial configuration"""
         if self.tData.update:
-            telegram_id = self.tData.update.effective_chat.id
-            if (c := self.tData.context.user_data.get(telegram_id)) :
+            if (c := self.tData.context.user_data) :
                 if (m := c.get("bot-msg")) :
                     try:
                         m.delete()
                     except BadRequest:
                         pass
-                self.tData.context.user_data.pop(telegram_id)
+                self.tData.context.user_data.update({})
             self.prev_state = None
             self.curr_state = self.conversation.start
         return self
@@ -314,7 +301,7 @@ class AutoConvHandler:
                     return self.force_state(fbs)
                 return self.NEXT
             # start
-            if not self.tData.context.user_data.get(telegram_id):
+            if not self.tData.context.user_data:
                 if delete_first:
                     update.message.delete()
                 state = self.conversation.start
@@ -323,11 +310,11 @@ class AutoConvHandler:
                 msg = self.tData.update.message.reply_text(
                     f"{reply_msg}", reply_markup=keyboard, **state.kwargs
                 )
-                self.tData.context.user_data.get(telegram_id).update({"bot-msg": msg})
+                self.tData.context.user_data.update({"bot-msg": msg})
                 return self.NEXT
             # get data
             state = self.conversation.get_state(
-                self.tData.context.user_data.get(telegram_id).get("state")
+                self.tData.context.user_data.get("state")
             )
             if self.tData.update.callback_query:
                 data = self.tData.update.callback_query.data
@@ -345,11 +332,7 @@ class AutoConvHandler:
                     and not match(state.regex, data)
                 ) or (state.handler and not data):
                     return self._wrong_message()
-                to_reply = (
-                    self.tData.context.user_data.get(telegram_id)
-                    .get("bot-msg")
-                    .edit_text
-                )
+                to_reply = self.tData.context.user_data.get("bot-msg").edit_text
                 self.tData.update.message.delete()
             # next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
@@ -357,7 +340,7 @@ class AutoConvHandler:
             keyboard, reply_msg = self._build_dynamic_stuff(state)
             to_reply(f"{reply_msg}", reply_markup=keyboard, **state.kwargs)
             if state == self.conversation.end:
-                self.tData.context.user_data.pop(telegram_id)
+                self.tData.context.user_data.update({})
                 return ConversationHandler.END
             return self.NEXT
         except (Exception, BadRequest) as e:

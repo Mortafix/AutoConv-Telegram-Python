@@ -147,7 +147,7 @@ force_state(state:Union[State, str])
 ### TelegramData Attributes
 - `update`,`context`: Telegram update and context.
 - `telegram_id`: Telegram ID of the user.
-- `user_data`: `context.user_data` of the user.
-- `states_data`: data for every state of the user.
+- `udata`: `context.user_data` of the user.
+- `sdata`: data for every state of the user.
 - `message`: message info, if possibile, of the user.
 - `exception`: last Python exception occurred.

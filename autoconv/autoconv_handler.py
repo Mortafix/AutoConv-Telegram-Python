@@ -236,7 +236,9 @@ class AutoConvHandler:
         if state.list:
             keyboard = self._build_dynamic_list(state, keyboard)
         reply_msg = (
-            state.msg if not state.action else state.msg.replace("@@@", action_str)
+            state.msg.replace("@@@", action_str)
+            if state.action and action_str
+            else state.msg
         )
         return InlineKeyboardMarkup(keyboard), reply_msg
 

@@ -1,3 +1,6 @@
+[![PyPI version](https://badge.fury.io/py/telegram-autoconv.svg)](https://badge.fury.io/py/telegram-autoconv)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # Setup
 You can find the package, [here](https://pypi.org/project/telegram-autoconv/).
 ```
@@ -21,7 +24,7 @@ But here, you can find a little documentation.
 
 ### State
 ```python
-State(state_name:str,state_text:str,data_type:Callable=int,back_button:Optional[str]=None,**kwargs)
+State(state_name:str, state_text:str, data_type:Callable=int, back_button:Optional[str]=None, **kwargs)
 ```
 - `state_name`: state name (and key for data dictionary).
 - `state_text`: message you want to print in that state.
@@ -31,7 +34,7 @@ State(state_name:str,state_text:str,data_type:Callable=int,back_button:Optional[
 
 ```python
 # callback handler
-add_keyboard(keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequence[int]]=None,max_row:int=3)
+add_keyboard(keyboard:Union[Sequence[str], Mapping[int, str]], size:Optional[Sequence[int]]=None, max_row:int=3)
 ```
 - `keyboard`: inline keyboard. Can be a dict (with custom value as key) or a list/tuple (default int value as key).
 - `size`: size for each row of the keyboard.
@@ -39,7 +42,7 @@ add_keyboard(keyboard:Union[Sequence[str],Mapping[int,str]],size:Optional[Sequen
 
 ```python
 # text handler
-add_text(regex:str=r'^.*$',error_message:Optional[str]=None)
+add_text(regex:str=r'^.*$', error_message:Optional[str]=None)
 ```
 - `regex`: regex for input text.
 - `error_message`: error message when regex fails.
@@ -52,7 +55,7 @@ add_action(function:Callable)
 
 ```python
 # function to create dynamic keyboard
-add_dynamic_keyboard(function:Callable,max_row:int=3)
+add_dynamic_keyboard(function:Callable, max_row:int=3)
 ```
 - `function`: function must take one parameter (`TelegramData` object). It must return a keyboard. Called when its state is reached.
 - `max_row`: max number of buttons in a row.
@@ -71,7 +74,7 @@ add_dynamic_routes(function:Callable)
 
 ```python
 # function to create dynamic list
-add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:str='>',all_elements:bool=False,max_row:int=4)
+add_dynamic_list(function:Callable, start:int=0, left_button:str='<', right_button:str='>', all_elements:bool=False, max_row:int=4)
 ```
 - `function`: function must take one parameter (`TelegramData` object). It must return a list of element. Called when its state is reached.
 - `start`: starting position in the list.
@@ -81,14 +84,14 @@ add_dynamic_list(function:Callable,start:int=0,left_button:str='<',right_button:
 
 ```python
 # custom handler
-add_custom_handler(handler:Callable,error_message:Optional[str]=None)
+add_custom_handler(handler:Callable, error_message:Optional[str]=None)
 ```
 - `handler`: function must take one parameter (`TelegramData` object). It must return an hashable value used to get to next state (by routes) or None if the handler fails.
 - `error_message`: error message when handler fails.
 
 ### Conversation
 ```python
-Conversation(start_state:State,end_state:Optional[State]=None,fallback_state:Optional[State]=None)
+Conversation(start_state:State, end_state:Optional[State]=None, fallback_state:Optional[State]=None)
 ```
 - `start_state`: first state of the conversation.
 - `end_state`: final state of the conversation.
@@ -96,7 +99,7 @@ Conversation(start_state:State,end_state:Optional[State]=None,fallback_state:Opt
 
 ```python
 # define the routes for a state in the conversation (automatically added to conversation)
-add_routes(state:State,routes:Optional[dict]=None,default:Optional[State]=None,back:Optional[State]=None)
+add_routes(state:State, routes:Optional[dict]=None, default:Optional[State]=None, back:Optional[State]=None)
 ```
 - `state`: initial state of the ruote.
 - `routes`: routes where a state should go for every possibile data received.
@@ -111,21 +114,21 @@ get_state(state_name:str)
 
 ```python
 # define a list of users able to access this conversation and an optional fallback State
-add_authorized_users(users_list:Sequence[int],no_auth_state:State)
+add_authorized_users(users_list:Sequence[int], no_auth_state:State)
 ```
 - `users_list`: list of users (Telegram ID) able to access the conversation.
 - `no_auth_state`: state in which unauthorized users end up.
 
 ### AutoConvHandler
 ```python
-AutoConvHandler(conversation:Conversation,telegram_state_name:Any)
+AutoConvHandler(conversation:Conversation, telegram_state_name:Any)
 ```
 - `conversation`: conversation to handle.
 - `telegram_state_name`: Telegram state name to handle callback, text and other things.
 
 ```python
 # manage conversation with update and context
-manage_conversation(update:Telegram.Update,context:Telegram.Context,delete_first:bool=True)
+manage_conversation(update:Telegram.Update, context:Telegram.Context, delete_first:bool=True)
 ```
 - `update`,`context`: from telegram bot function.
 - `delete_first`: if you want to delete the user message that trigger this handler.
@@ -137,7 +140,7 @@ restart()
 
 ```python
 # force a state in the conversation
-force_state(state:Union[State,str])
+force_state(state:Union[State, str])
 ```
 - `state`: force the conversation to a specific state.
 

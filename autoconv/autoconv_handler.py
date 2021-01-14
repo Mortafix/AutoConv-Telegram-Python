@@ -16,6 +16,7 @@ class AutoConvHandler:
         self.prev_state = None
         self.curr_state = conversation.start
         self._bkup_state_routes, self._list_keyboard = None, None
+        self.list_labels = None
 
     def _build_keyboard(self, state):
         """Build Keyboard for callback state"""
@@ -144,7 +145,9 @@ class AutoConvHandler:
         if (state_l := data.get("list")) :
             i = int(data.get("list_i"))
             if state.list_all:
-                new_i = state_l.index(data.get("data").get(state.name))
+                curr_list = self.list_labels or state_l
+                elem_list = data.get("data").get(state.name)
+                new_i = curr_list.index(elem_list) if elem_list in curr_list else i
             elif (
                 not state.list_all
                 and data.get("data").get(state.name) not in state.list_buttons
@@ -173,9 +176,16 @@ class AutoConvHandler:
             for button in kl:
                 if (c := button.callback_data) is not None and isinstance(c, int):
                     button.callback_data += len(state_l)
+
+        self.list_labels = state.list_labels and state.list_labels(self.tData.prepare())
         list_buttons = [
             [
-                InlineKeyboardButton(b, callback_data=r * state.list_max_row + i)
+                InlineKeyboardButton(
+                    self.list_labels[r * state.list_max_row + i]
+                    if self.list_labels
+                    else b,
+                    callback_data=r * state.list_max_row + i,
+                )
                 for i, b in enumerate(
                     state_l[
                         r * state.list_max_row : r * state.list_max_row
@@ -223,7 +233,9 @@ class AutoConvHandler:
         """Compute dynamic stuff: action > routes > keyboard > list"""
         data = self.tData.context.user_data
         if self.prev_state != self.curr_state and data.get("list"):
-            data.pop("list"), data.pop("list_i")
+            data.pop("list")
+            data.pop("list_i")
+            self.list_labels = None
         if state.list:
             self._update_dynamic_list(state)
         if state.action:

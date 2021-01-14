@@ -31,7 +31,8 @@ class State:
             self.list_buttons,
             self.list_start,
             self.list_max_row,
-        ) = (None, None, None, None, None)
+            self.list_labels,
+        ) = (None, None, None, None, None, None)
         self.handler, self.handler_error_text = None, None
 
     def __str__(self):
@@ -106,6 +107,7 @@ class State:
         left_button: str = "<",
         right_button: str = ">",
         all_elements: bool = False,
+        labels: Optional[Callable] = None,
         max_row: int = 4,
     ):
         """Add function to create a dynamic list with pages"""
@@ -114,6 +116,7 @@ class State:
         self.list_all = all_elements
         self.list_start = start
         self.list_max_row = max_row
+        self.list_labels = labels
 
     @validate_arguments
     def add_custom_handler(

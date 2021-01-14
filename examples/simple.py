@@ -12,7 +12,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-BOT_TOKEN = "1579494237:AAHw6nQfRBboYvD-PKB1mV4W0WUDoHtuPMc"
+BOT_TOKEN = "BOT-TOKEN"
 
 # --------------------------------- Simple commands -----------------------------------
 

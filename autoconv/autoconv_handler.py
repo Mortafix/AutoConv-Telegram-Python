@@ -128,8 +128,13 @@ class AutoConvHandler:
         ) and not self.tData.context.user_data.get("error"):
             keyboard = self._build_keyboard(state)
             self.tData.context.user_data.update({"error": True})
+            msg = (
+                state.msg.replace("@@@", a)
+                if state.action and (a := state.action(self.tData.prepare()))
+                else state.msg
+            )
             self.tData.context.user_data.get("bot-msg").edit_text(
-                f"{state.msg}\n\n"
+                f"{msg}\n\n"
                 + (
                     (self.tData.update.message.text and state.regex_error_text)
                     or state.handler_error_text
@@ -341,10 +346,14 @@ class AutoConvHandler:
                     self.tData.update.message.delete()
                     return self.NEXT
                 if (
-                    state.regex
-                    and isinstance(data, str)
-                    and not match(state.regex, data)
-                ) or (state.handler and not data):
+                    (
+                        state.regex
+                        and isinstance(data, str)
+                        and not match(state.regex, data)
+                    )
+                    or (state.regex and not data)
+                    or (state.handler and not data)
+                ):
                     return self._wrong_message()
                 to_reply = self.tData.context.user_data.get("bot-msg").edit_text
                 self.tData.update.message.delete()

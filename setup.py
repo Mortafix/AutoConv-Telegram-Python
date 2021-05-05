@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="telegram-autoconv",
-    version="0.0.48",
+    version="0.0.49",
     author="Moris Doratiotto",
     author_email="moris.doratiotto@gmail.com",
     description="A python module to auto build conversation for a Telegram bot",

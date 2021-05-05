@@ -54,7 +54,7 @@ class Conversation:
         state: State,
         routes: Optional[dict] = None,
         default: Optional[State] = None,
-        back: Optional[State] = None,
+        back: Optional[Union[bool, State]] = None,
     ):
         """Add routes for a state"""
         if state not in self.state_list:
@@ -80,7 +80,7 @@ class Conversation:
                 s := self.routes.get(state.name)
             ) else self.routes.update({state.name: {-1: default}})
         if back:
-            if back not in self.state_list:
+            if isinstance(back, State) and back not in self.state_list:
                 self._add_states(back)
             s.update({"BACK": back}) if (
                 s := self.routes.get(state.name)

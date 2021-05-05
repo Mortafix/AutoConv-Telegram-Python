@@ -143,13 +143,13 @@ Conversation.add_routes(
     state: State,
     routes: Optional[dict] = None,
     default: Optional[State] = None,
-    back: Optional[State] = None
+    back: Optional[Union[bool,State]] = None
 )
 ```
 - `state`: initial state of the ruote.
 - `routes`: routes where a state should go for every possibile data received.
 - `default`: default route if value isn't in ruotes.
-- `back`: route to go when the back button is pressed, if exists.
+- `back`: route to go when the back button is pressed, if exists. If `True` it'll go to the previous state.
 
 ```python
 # get a states by name in the conversation

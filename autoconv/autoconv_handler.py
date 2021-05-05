@@ -46,18 +46,15 @@ class AutoConvHandler:
 
     def _next_state(self, state, value):
         """Follow state ruote"""
-        if value not in self.conversation.routes.get(
-            state.name
-        ) and -1 not in self.conversation.routes.get(state.name):
+        states = self.conversation.routes.get(state.name)
+        if value not in states and -1 not in states:
             raise ValueError(
                 f"Deafult route not found and value {value} "
                 "doesn't exist as route of {state}."
             )
-        return (
-            self.conversation.routes.get(state.name).get(value)
-            if value in self.conversation.routes.get(state.name)
-            else self.conversation.routes.get(state.name).get(-1)
-        )
+        if value == "BACK" and states.get(value) is True:
+            return self.prev_state
+        return states.get(value) or states.get(-1)
 
     def _change_state(self, data, state=None):
         """Set variables for next state"""

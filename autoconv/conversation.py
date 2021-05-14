@@ -54,7 +54,7 @@ class Conversation:
         state: State,
         routes: Optional[dict] = None,
         default: Optional[State] = None,
-        back: Optional[State] = None,
+        back: Optional[Union[bool, State]] = None,
     ):
         """Add routes for a state"""
         if state not in self.state_list:

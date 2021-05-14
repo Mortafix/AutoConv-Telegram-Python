@@ -96,16 +96,8 @@ class AutoConvHandler:
         elif data_context.get("error") is not None:
             data_context.pop("error")
         if self._bkup_state_routes:
-            back_route = (
-                self._bkup_state_routes.pop("BACK")
-                if "BACK" in self._bkup_state_routes
-                else None
-            )
-            default_route = (
-                self._bkup_state_routes.pop(-1)
-                if -1 in self._bkup_state_routes
-                else None
-            )
+            back_route = self._bkup_state_routes.pop("BACK", None)
+            default_route = self._bkup_state_routes.pop(-1, None)
             self.conversation.add_routes(
                 self.prev_state,
                 self._bkup_state_routes,
@@ -268,10 +260,12 @@ class AutoConvHandler:
                 }
             )
 
-    def force_state(self, state):
+    def force_state(self, state, delete_message=False):
         """Force a state in the conversation"""
         if isinstance(state, str):
             state = self.conversation.get_state(state)
+        if delete_message:
+            self.tData.message.delete()
         if self.tData.update and state in self.conversation.state_list:
             self._init_context(state)
             if not (udata := self.tData.context.user_data).get("bot-msg"):

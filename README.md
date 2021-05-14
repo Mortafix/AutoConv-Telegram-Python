@@ -192,16 +192,22 @@ AutoConvHandler.manage_conversation(
 
 ```python
 # restart the conversation to initial configuration
-AutoConvHandler.restart()
+AutoConvHandler.restart(
+    update: Telegram.Update,
+    context: Telegram.Context
+)
 ```
+- `update`,`context`: from telegram bot function.
 
 ```python
 # force a state in the conversation
 AutoConvHandler.force_state(
-    state: Union[State, str]
+    state: Union[State, str],
+    update: Telegram.Update
 )
 ```
 - `state`: force the conversation to a specific state.
+- `update`: from telegram bot function.
 
 ### TelegramData Attributes
 - `update`,`context`: Telegram update and context.

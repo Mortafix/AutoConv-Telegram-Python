@@ -252,50 +252,47 @@ class AutoConvHandler:
         """Initializate user data in context"""
         if not self.tData.context.user_data:
             self.tData.context.user_data.update(
-                {
-                    "prev_state": None,
-                    "state": state.name,
-                    "error": False,
-                    "data": {},
-                }
+                {"prev_state": None, "state": state.name, "error": False, "data": {}}
             )
 
-    def force_state(self, state, delete_message=False):
+    def _handle_bad_request(self, exception, update, msg, keyboard, state):
+        """Handle every bad request"""
+        self.tData.exception = exception
+        if match("Message to edit not found", str(exception)):
+            m = update.message.reply_text(msg, reply_markup=keyboard, **state.kwargs)
+            self.tData.context.user_data.update({"bot-msg": m})
+            return
+        if not match("Message is not modified", str(exception)):
+            if self.conversation.fallback_state:
+                return self.force_state(self.conversation.fallback_state, update)
+            raise exception
+
+    def force_state(self, state, update):
         """Force a state in the conversation"""
         if isinstance(state, str):
             state = self.conversation.get_state(state)
-        if delete_message:
-            self.tData.message.delete()
-        if self.tData.update and state in self.conversation.state_list:
+        if state in self.conversation.state_list:
+            # prepare data
             self._init_context(state)
-            if not (udata := self.tData.context.user_data).get("bot-msg"):
-                send_msg = self.tData.update.message.reply_text
-            else:
-                send_msg = udata.get("bot-msg").edit_text
+            state = self._change_state(None, state=state)
+            keyboard, reply_msg = self._build_dynamic_stuff(state)
+            # check if the message exists
+            old_msg = self.tData.context.user_data.get("bot-msg")
+            send_msg = old_msg and old_msg.edit_text or update.message.reply_text
             try:
-                state = self._change_state(None, state=state)
-                keyboard, reply_msg = self._build_dynamic_stuff(state)
-                m = send_msg(text=f"{reply_msg}", reply_markup=keyboard, **state.kwargs)
+                m = send_msg(text=reply_msg, reply_markup=keyboard, **state.kwargs)
                 self.tData.context.user_data.update({"bot-msg": m})
             except BadRequest as e:
-                self.tData.exception = e
-                if not match("Message is not modified", str(e)):
-                    raise e
+                self._handle_bad_request(e, update, reply_msg, keyboard, state)
             return self.NEXT
 
-    def restart(self):
+    def restart(self, update):
         """Restart handler to initial configuration"""
-        if self.tData.update:
-            if (c := self.tData.context.user_data) :
-                if (m := c.get("bot-msg")) :
-                    try:
-                        m.delete()
-                    except BadRequest:
-                        pass
-                self.tData.context.user_data.update({})
-            self.prev_state = None
-            self.curr_state = self.conversation.start
-        return self
+        if self.tData.context:
+            self.tData.context.user_data.get("data").clear()
+            self.tData.context.user_data.pop("bot-msg")
+            self.tData.prepare()
+        return self.force_state(self.conversation.start, update)
 
     def manage_conversation(self, update, context, delete_first=False):
         """Master function for converastion"""
@@ -352,14 +349,10 @@ class AutoConvHandler:
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
             state = self._change_state(typed_data)
             keyboard, reply_msg = self._build_dynamic_stuff(state)
-            to_reply(f"{reply_msg}", reply_markup=keyboard, **state.kwargs)
+            to_reply(reply_msg, reply_markup=keyboard, **state.kwargs)
             if state == self.conversation.end:
-                self.tData.context.user_data.update({})
+                self.tData.context.user_data.clear()
                 return ConversationHandler.END
             return self.NEXT
         except (Exception, BadRequest) as e:
-            self.tData.exception = e
-            if not match("Message is not modified", str(e)):
-                if self.conversation.fallback_state:
-                    return self.force_state(self.conversation.fallback_state)
-                raise e
+            self._handle_bad_request(e, update, reply_msg, keyboard, state)

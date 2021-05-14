@@ -298,6 +298,7 @@ class AutoConvHandler:
 
     def manage_conversation(self, update, context, delete_first=False):
         """Master function for converastion"""
+        reply_msg, keyboard, state = None, None, None
         try:
             self.prev_state = self.prev_state or self.conversation.get_state(
                 context.user_data.get("prev_state")

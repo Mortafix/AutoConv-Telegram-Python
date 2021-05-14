@@ -89,7 +89,7 @@ class Conversation:
             ) else self.routes.update({state.name: {"BACK": back}})
 
     @validate_arguments
-    def get_state(self, state_name: str):
+    def get_state(self, state_name: Optional[str]):
         """Get state from states list by name"""
         if state_name == self.start.name:
             return self.start

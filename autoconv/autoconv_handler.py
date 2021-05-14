@@ -286,17 +286,22 @@ class AutoConvHandler:
                 self._handle_bad_request(e, update, reply_msg, keyboard, state)
             return self.NEXT
 
-    def restart(self, update):
+    def restart(self, update, context):
         """Restart handler to initial configuration"""
         if self.tData.context:
             self.tData.context.user_data.get("data").clear()
             self.tData.context.user_data.pop("bot-msg")
             self.tData.prepare()
+        else:
+            self.tData.update_telegram_data(update, context)
         return self.force_state(self.conversation.start, update)
 
     def manage_conversation(self, update, context, delete_first=False):
         """Master function for converastion"""
         try:
+            self.prev_state = self.prev_state or self.conversation.get_state(
+                context.user_data.get("prev_state")
+            )
             self.tData.update_telegram_data(update, context)
             telegram_id = self.tData.update.effective_chat.id
             # check authorization

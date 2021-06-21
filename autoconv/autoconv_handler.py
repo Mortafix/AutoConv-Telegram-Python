@@ -307,11 +307,11 @@ class AutoConvHandler:
             telegram_id = self.tData.update.effective_chat.id
             # check authorization
             if (
-                self.conversation.users_list
+                self.conversation.users_list is not None
                 and telegram_id not in self.conversation.users_list
             ):
                 if (fbs := self.conversation.no_auth_state) :
-                    return self.force_state(fbs)
+                    return self.force_state(fbs, update)
                 return self.NEXT
             # start
             if not self.tData.context.user_data:

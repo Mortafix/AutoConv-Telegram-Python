@@ -117,11 +117,11 @@ class Conversation:
     def set_defaults(
         self,
         params: Optional[dict] = None,
-        function: Optional[Callable] = str,
+        func: Optional[Callable] = None,
         back_button: Optional[str] = None,
     ):
         """Define default values, a function applied to text and a back button
         for every States in the conversation"""
         self.defaults = params
-        self.default_func = function
+        self.default_func = func or str
         self.default_back = back_button

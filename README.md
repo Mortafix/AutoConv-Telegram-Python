@@ -20,8 +20,17 @@ from autoconv.conversation import Conversation
 from autoconv.autoconv_handler import AutoConvHandler
 ```
 
+# Persistence
+If you want to use persistence in your bot, Autoconv provides a simple persistence based on PicklePersistence. The normal PicklePersistence doesn't work, due to an instance of a `Telegram.Message` in the `user_data`, this persistence uses a workaround.
+```python
+from autoconv.persistence import AutoconvPersistence
+persistence = AutoconvPersistence(filename="bot_persistence", bot_token=BOT_TOKEN)
+updater = Updater(BOT_TOKEN, persistence=persistence)
+```
+> WARNING! This persistence will save the bot token in a pickle file.
+
 # Documentation
-I know you want examples, in fact there is a beautiful folder with some examples.  
+I know you want examples, in fact there is a beautiful folder with some [examples](https://github.com/Mortafix/AutoConv-Telegram-Python/tree/master/examples).
 But here, you can find a little documentation.
 
 ### State

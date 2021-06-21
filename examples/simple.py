@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from autoconv.autoconv_handler import AutoConvHandler
 from autoconv.conversation import Conversation
@@ -39,6 +40,7 @@ MARKDOWN = "Markdown"
 BACK = "Back"
 
 
+# ---- FUNCS
 def comment_type(data):
     return "" if data == "0" else data
 
@@ -51,40 +53,45 @@ def recap(tdata):
     return "\n".join([f"{k.title()}: *{v}*" for k, v in tdata.sdata.items()])
 
 
-# State
-name = State("name", "Enter your *name*.", data_type=str, parse_mode=MARKDOWN)
+def add_timestamp(text):
+    return f"({datetime.now():%H:%M})\n\n{text}"
+
+
+# ---- STATES
+name = State("name", "Enter your *name*.", data_type=str, back_button=False)
 name.add_text()
-gender = State("gender", "Select your *gender*", parse_mode=MARKDOWN, back_button=BACK)
+gender = State("gender", "Select your *gender*", back_button="< Another back")
 gender.add_keyboard(["Male", "Female", "Other"])
-age = State("age", "Enter your *age*", parse_mode=MARKDOWN, back_button=BACK)
+age = State("age", "Enter your <b>age</b>", parse_mode="html")
 age.add_text(r"\d{1,2}", "Enter a *valid* age")
-underage = State(
-    "consent",
-    "Do you know that the responsibility will fall on your parents?",
-    back_button=BACK,
-)
+underage = State("consent", "Drop the _responsibility_ on your parents?")
 underage.add_keyboard(["Yes", "Abort"])
 comment = State(
-    "comment",
-    "Do you want to enter additional comment?",
-    data_type=comment_type,
-    back_button=BACK,
+    "comment", "Do you want to enter additional comment?", data_type=comment_type
 )
 comment.add_keyboard(["Nope"])
 comment.add_text()
-end = State("end", "@@@", parse_mode=MARKDOWN)
+end = State("end", "@@@", back_button=False)
 end.add_action(recap)
-# Conversation
-example = Conversation(name, end_state=end)
-example.add_routes(name, default=gender)
-example.add_routes(gender, default=age, back=name)
-example.add_routes(
+
+# ---- CONVERSATION
+conv = Conversation(name, end_state=end)
+conv.add_defaults(
+    params={"parse_mode": MARKDOWN, "disable_web_page_preview": True},
+    function=add_timestamp,
+    back_button=BACK,
+)
+conv.add_routes(name, default=gender)
+conv.add_routes(gender, default=age, back=name)
+conv.add_routes(
     age, routes={i: underage for i in range(19)}, default=comment, back=gender
 )
-example.add_routes(underage, routes={0: comment, 1: end}, back=age)
-example.add_routes(comment, default=end, back=age)
-# Handler
-autoconv = AutoConvHandler(example, STATE)
+conv.add_routes(underage, routes={0: comment, 1: end}, back=age)
+conv.add_routes(comment, default=end)
+conv.add_routes(end)
+
+# ---- HANDLER
+autoconv = AutoConvHandler(conv, STATE)
 
 
 def autoconv_command(update, context):
@@ -96,7 +103,7 @@ def autoconv_command(update, context):
 
 def main():
     """Bot instance"""
-    updater = Updater(BOT_TOKEN, use_context=True)
+    updater = Updater(BOT_TOKEN)
     dp = updater.dispatcher
 
     # -----------------------------------------------------------------------

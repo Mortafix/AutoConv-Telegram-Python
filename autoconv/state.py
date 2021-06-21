@@ -11,7 +11,7 @@ class State:
         state_name: str,
         state_text: str,
         data_type: Callable = int,
-        back_button: Optional[str] = None,
+        back_button: Optional[Union[bool, str]] = None,
         **kwargs,
     ):
         self.name = state_name

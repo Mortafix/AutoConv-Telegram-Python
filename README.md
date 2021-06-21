@@ -30,14 +30,14 @@ State(
     state_name: str,
     state_text: str,
     data_type: Callable = int,
-    back_button: Optional[str] = None,
+    back_button: Optional[Union[bool, str]] = None,
     **kwargs
 )
 ```
 - `state_name`: state name (and key for data dictionary).
 - `state_text`: message you want to print in that state.
 - `data_type`: data type, default or custom.
-- `back_button`: text for back button.
+- `back_button`: text for back button. _False_ if you have a default button (defined in the Conversation) and you don't want it in this State.
 - `kwargs`: kwargs with every parameters you need from Telegram API _sendMessage_.
 
 ```python
@@ -168,6 +168,18 @@ Conversation.add_authorized_users(
 ```
 - `users_list`: list of users (Telegram ID) able to access the conversation.
 - `no_auth_state`: state in which unauthorized users end up.
+
+```python
+# Define default values, a function applied to text and a back button for every States in the conversation
+Conversation.add_defaults(
+    params: Optional[dict] = None,
+    function: Optional[Callable] = None,
+    back_button: Optional[str] = None,
+)
+```
+- `params`: kwargs with every parameters you need from Telegram API _sendMessage_.
+- `function`: default function applied to every State text.
+- `back_button`: default back button for every State.
 
 ### AutoConvHandler
 ```python

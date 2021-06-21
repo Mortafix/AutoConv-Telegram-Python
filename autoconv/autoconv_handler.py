@@ -34,10 +34,10 @@ class AutoConvHandler:
             if (key_param := state.callback)
             else [[]]
         )
+        back_button_text = state.back_button or self.conversation.default_back
         back_button = (
-            [[InlineKeyboardButton(text=state.back_button, callback_data="BACK")]]
-            if state.back_button
-            and self.conversation.routes.get(state.name).get("BACK")
+            [[InlineKeyboardButton(text=back_button_text, callback_data="BACK")]]
+            if back_button_text and self.conversation.routes.get(state.name).get("BACK")
             else []
         )
         return (
@@ -122,12 +122,12 @@ class AutoConvHandler:
                 if state.action and (a := state.action(self.tData.prepare()))
                 else state.msg
             )
+            reply_msg = f"{msg}\n\n" + (
+                (self.tData.update.message.text and state.regex_error_text)
+                or state.handler_error_text
+            )
             self.tData.context.user_data.get("bot-msg").edit_text(
-                f"{msg}\n\n"
-                + (
-                    (self.tData.update.message.text and state.regex_error_text)
-                    or state.handler_error_text
-                ),
+                self.conversation.default_func(reply_msg),
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 **state.kwargs,
             )
@@ -320,8 +320,11 @@ class AutoConvHandler:
                 state = self.conversation.start
                 self._init_context(state)
                 keyboard, reply_msg = self._build_dynamic_stuff(state)
+                kwargs = self.conversation.defaults | state.kwargs
                 msg = self.tData.update.message.reply_text(
-                    f"{reply_msg}", reply_markup=keyboard, **state.kwargs
+                    self.conversation.default_func(reply_msg),
+                    reply_markup=keyboard,
+                    **kwargs,
                 )
                 self.tData.context.user_data.update({"bot-msg": msg})
                 return self.NEXT
@@ -355,7 +358,12 @@ class AutoConvHandler:
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
             state = self._change_state(typed_data)
             keyboard, reply_msg = self._build_dynamic_stuff(state)
-            to_reply(reply_msg, reply_markup=keyboard, **state.kwargs)
+            kwargs = self.conversation.defaults | state.kwargs
+            to_reply(
+                self.conversation.default_func(reply_msg),
+                reply_markup=keyboard,
+                **kwargs,
+            )
             if state == self.conversation.end:
                 self.tData.context.user_data.clear()
                 return ConversationHandler.END

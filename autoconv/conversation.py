@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
 from autoconv.state import State
 from pydantic import validate_arguments
@@ -16,8 +16,11 @@ class Conversation:
         self.end = end_state
         self.fallback_state = fallback_state
         self.state_list = [st for st in [start_state, end_state, fallback_state] if st]
-        self.routes = {}
+        self.routes = dict()
         self.users_list = None
+        self.defaults = dict()
+        self.default_func = str
+        self.default_back = None
 
     def __str__(self):
         routes_print = "\n".join(
@@ -79,8 +82,10 @@ class Conversation:
             s.update({-1: default}) if (
                 s := self.routes.get(state.name)
             ) else self.routes.update({state.name: {-1: default}})
-        if back or state.back_button:
-            if state.back_button:
+        if back or state.back_button or self.default_back:
+            if state.back_button or (
+                state.back_button is not False and self.default_back
+            ):
                 back = True
             if isinstance(back, State) and back not in self.state_list:
                 self._add_states(back)
@@ -106,3 +111,16 @@ class Conversation:
         and an optional fallback State"""
         self.no_auth_state = no_auth_state
         self.users_list = users_list
+
+    @validate_arguments
+    def add_defaults(
+        self,
+        params: Optional[dict] = None,
+        function: Optional[Callable] = None,
+        back_button: Optional[str] = None,
+    ):
+        """Define default values, a function applied to text and a back button
+        for every States in the conversation"""
+        self.defaults = params
+        self.default_func = function
+        self.default_back = back_button

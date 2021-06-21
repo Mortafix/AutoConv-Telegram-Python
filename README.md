@@ -180,7 +180,7 @@ Conversation.add_authorized_users(
 
 ```python
 # Define default values, a function applied to text and a back button for every States in the conversation
-Conversation.add_defaults(
+Conversation.set_defaults(
     params: Optional[dict] = None,
     function: Optional[Callable] = None,
     back_button: Optional[str] = None,

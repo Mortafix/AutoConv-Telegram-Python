@@ -126,10 +126,11 @@ class AutoConvHandler:
                 (self.tData.update.message.text and state.regex_error_text)
                 or state.handler_error_text
             )
+            kwargs = self.conversation.defaults | state.kwargs
             self.tData.context.user_data.get("bot-msg").edit_text(
                 self.conversation.default_func(reply_msg),
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                **state.kwargs,
+                **kwargs,
             )
         return self.NEXT
 
@@ -259,7 +260,10 @@ class AutoConvHandler:
         """Handle every bad request"""
         self.tData.exception = exception
         if match("Message to edit not found", str(exception)):
-            m = update.message.reply_text(msg, reply_markup=keyboard, **state.kwargs)
+            kwargs = self.conversation.defaults | state.kwargs
+            m = update.message.reply_text(
+                self.conversation.default_func(msg), reply_markup=keyboard, **kwargs
+            )
             self.tData.context.user_data.update({"bot-msg": m})
             return
         if not match("Message is not modified", str(exception)):
@@ -280,7 +284,12 @@ class AutoConvHandler:
             old_msg = self.tData.context.user_data.get("bot-msg")
             send_msg = old_msg and old_msg.edit_text or update.message.reply_text
             try:
-                m = send_msg(text=reply_msg, reply_markup=keyboard, **state.kwargs)
+                kwargs = self.conversation.defaults | state.kwargs
+                m = send_msg(
+                    text=self.conversation.default_func(reply_msg),
+                    reply_markup=keyboard,
+                    **kwargs,
+                )
                 self.tData.context.user_data.update({"bot-msg": m})
             except BadRequest as e:
                 self._handle_bad_request(e, update, reply_msg, keyboard, state)

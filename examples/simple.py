@@ -76,7 +76,7 @@ end.add_action(recap)
 
 # ---- CONVERSATION
 conv = Conversation(name, end_state=end)
-conv.add_defaults(
+conv.set_defaults(
     params={"parse_mode": MARKDOWN, "disable_web_page_preview": True},
     function=add_timestamp,
     back_button=BACK,

@@ -38,7 +38,7 @@ class Conversation:
         return (
             f"{heading}\n"
             f"# State list: {[str(s) for s in self.state_list]}\n"
-            f"#\tRoutes:\n{routes_print}"
+            f"# Routes:\n{routes_print}"
         )
 
     def _add_states(self, states: Union[Sequence[State], State]):
@@ -111,12 +111,13 @@ class Conversation:
         and an optional fallback State"""
         self.no_auth_state = no_auth_state
         self.users_list = users_list
+        self._add_states(no_auth_state)
 
     @validate_arguments
-    def add_defaults(
+    def set_defaults(
         self,
         params: Optional[dict] = None,
-        function: Optional[Callable] = None,
+        function: Optional[Callable] = str,
         back_button: Optional[str] = None,
     ):
         """Define default values, a function applied to text and a back button

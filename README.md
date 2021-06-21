@@ -125,7 +125,7 @@ State.add_dynamic_list(
 - `labels`: function must take one parameter (`TelegramData` object). Combined with `all_elements = True`, it must return a list of string in order to change buttons labels. Called when its state is reached.
 
 ```python
-# custom handler
+# function to create a custom handler
 State.add_custom_handler(
     handler: Callable,
     error_message: Optional[str] = None
@@ -133,6 +133,14 @@ State.add_custom_handler(
 ```
 - `handler`: function must take one parameter (`TelegramData` object). It must return an hashable value used to get to next state (by routes) or None if the handler fails.
 - `error_message`: error message when handler fails.
+
+```python
+# function to set a long task
+State.set_long_task(
+    self, text: str
+)
+```
+- `text`: text for a message that will be sent before the main one (for long task).
 
 ### Conversation
 ```python

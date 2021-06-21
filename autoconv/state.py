@@ -34,6 +34,7 @@ class State:
             self.list_labels,
         ) = (None, None, None, None, None, None)
         self.handler, self.handler_error_text = None, None
+        self.long_task = None
 
     def __str__(self):
         return f"State <{self.name}>"
@@ -126,3 +127,8 @@ class State:
         must return an hashable value used to get to next state (by routes)"""
         self.handler = handler
         self.handler_error_text = error_message
+
+    @validate_arguments
+    def set_long_task(self, text: str):
+        """Add a middle message wainting for the long main task"""
+        self.long_task = text

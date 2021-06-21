@@ -366,6 +366,8 @@ class AutoConvHandler:
             # next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
             state = self._change_state(typed_data)
+            if state.long_task:
+                to_reply(state.long_task)
             keyboard, reply_msg = self._build_dynamic_stuff(state)
             kwargs = self.conversation.defaults | state.kwargs
             to_reply(

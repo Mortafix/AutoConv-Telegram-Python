@@ -18,6 +18,8 @@ class AutoConvHandler:
         self._bkup_state_routes, self._list_keyboard = None, None
         self.list_labels = None
 
+    # ---- Next state
+
     def _build_keyboard(self, state):
         """Build Keyboard for callback state"""
         cmd_list = (
@@ -50,7 +52,7 @@ class AutoConvHandler:
         if value not in states and -1 not in states:
             raise ValueError(
                 f"Deafult route not found and value {value} "
-                "doesn't exist as route of {state}."
+                f"doesn't exist as route of {state}."
             )
         if value == "BACK" and states.get(value) is True:
             return self.prev_state
@@ -126,13 +128,17 @@ class AutoConvHandler:
                 (self.tData.update.message.text and state.regex_error_text)
                 or state.handler_error_text
             )
-            kwargs = self.conversation.defaults | state.kwargs
-            self.tData.context.user_data.get("bot-msg").edit_text(
-                self.conversation.default_func(reply_msg),
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                **kwargs,
+            self._send_message(
+                state,
+                self.tData.context.user_data.get("bot-msg").edit_text,
+                msg=reply_msg,
+                keyboard=InlineKeyboardMarkup(keyboard),
+                dynamic=False,
+                save=False,
             )
         return self.NEXT
+
+    # ---- Dynamic stuff
 
     def _update_dynamic_list(self, state):
         """Update i and routes backup for dynamic list"""
@@ -249,6 +255,8 @@ class AutoConvHandler:
         )
         return InlineKeyboardMarkup(keyboard), reply_msg
 
+    # ---- Dev functions
+
     def _init_context(self, state):
         """Initializate user data in context"""
         if not self.tData.context.user_data:
@@ -256,20 +264,34 @@ class AutoConvHandler:
                 {"prev_state": None, "state": state.name, "error": False, "data": {}}
             )
 
-    def _handle_bad_request(self, exception, update, msg, keyboard, state):
+    def _handle_bad_request(self, exception, update, state):
         """Handle every bad request"""
         self.tData.exception = exception
         if match("Message to edit not found", str(exception)):
-            kwargs = self.conversation.defaults | state.kwargs
-            m = update.message.reply_text(
-                self.conversation.default_func(msg), reply_markup=keyboard, **kwargs
-            )
-            self.tData.context.user_data.update({"bot-msg": m})
-            return
+            return self._send_message(state, update.message.reply_text)
         if not match("Message is not modified", str(exception)):
             if self.conversation.fallback_state:
                 return self.force_state(self.conversation.fallback_state, update)
             raise exception
+
+    def _send_message(
+        self, state, send_func, msg=None, keyboard=None, dynamic=True, save=True
+    ):
+        """Main function to send messages"""
+        if state.long_task:
+            send_func(state.long_task)
+        if dynamic:
+            keyboard, msg = self._build_dynamic_stuff(state)
+        new_msg = send_func(
+            self.conversation.default_func(msg),
+            reply_markup=keyboard,
+            **(self.conversation.defaults | state.kwargs),
+        )
+        if save:
+            self.tData.context.user_data.update({"bot-msg": new_msg})
+        return new_msg
+
+    # ---- Public functions
 
     def force_state(self, state, update):
         """Force a state in the conversation"""
@@ -279,20 +301,13 @@ class AutoConvHandler:
             # prepare data
             self._init_context(state)
             state = self._change_state(None, state=state)
-            keyboard, reply_msg = self._build_dynamic_stuff(state)
             # check if the message exists
             old_msg = self.tData.context.user_data.get("bot-msg")
             send_msg = old_msg and old_msg.edit_text or update.message.reply_text
             try:
-                kwargs = self.conversation.defaults | state.kwargs
-                m = send_msg(
-                    text=self.conversation.default_func(reply_msg),
-                    reply_markup=keyboard,
-                    **kwargs,
-                )
-                self.tData.context.user_data.update({"bot-msg": m})
+                self._send_message(state, send_msg)
             except BadRequest as e:
-                self._handle_bad_request(e, update, reply_msg, keyboard, state)
+                self._handle_bad_request(e, update, state)
             return self.NEXT
 
     def restart(self, update, context):
@@ -307,14 +322,14 @@ class AutoConvHandler:
 
     def manage_conversation(self, update, context, delete_first=False):
         """Master function for converastion"""
-        reply_msg, keyboard, state = None, None, None
+        state = None
         try:
             self.prev_state = self.prev_state or self.conversation.get_state(
                 context.user_data.get("prev_state")
             )
             self.tData.update_telegram_data(update, context)
             telegram_id = self.tData.update.effective_chat.id
-            # check authorization
+            # ---- check authorization
             if (
                 self.conversation.users_list is not None
                 and telegram_id not in self.conversation.users_list
@@ -322,22 +337,16 @@ class AutoConvHandler:
                 if (fbs := self.conversation.no_auth_state) :
                     return self.force_state(fbs, update)
                 return self.NEXT
-            # start
+
+            # ---- start | first message
             if not self.tData.context.user_data:
                 if delete_first:
                     update.message.delete()
                 state = self.conversation.start
                 self._init_context(state)
-                keyboard, reply_msg = self._build_dynamic_stuff(state)
-                kwargs = self.conversation.defaults | state.kwargs
-                msg = self.tData.update.message.reply_text(
-                    self.conversation.default_func(reply_msg),
-                    reply_markup=keyboard,
-                    **kwargs,
-                )
-                self.tData.context.user_data.update({"bot-msg": msg})
+                self._send_message(state, self.tData.update.message.reply_text)
                 return self.NEXT
-            # get data
+            # ---- get data | next messages
             state = self.conversation.get_state(
                 self.tData.context.user_data.get("state")
             )
@@ -363,21 +372,13 @@ class AutoConvHandler:
                     return self._wrong_message()
                 to_reply = self.tData.context.user_data.get("bot-msg").edit_text
                 self.tData.update.message.delete()
-            # next stage
+            # ---- next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
             state = self._change_state(typed_data)
-            if state.long_task:
-                to_reply(state.long_task)
-            keyboard, reply_msg = self._build_dynamic_stuff(state)
-            kwargs = self.conversation.defaults | state.kwargs
-            to_reply(
-                self.conversation.default_func(reply_msg),
-                reply_markup=keyboard,
-                **kwargs,
-            )
+            self._send_message(state, to_reply, save=False)
             if state == self.conversation.end:
                 self.tData.context.user_data.clear()
                 return ConversationHandler.END
             return self.NEXT
         except (Exception, BadRequest) as e:
-            self._handle_bad_request(e, update, reply_msg, keyboard, state)
+            self._handle_bad_request(e, update, state)

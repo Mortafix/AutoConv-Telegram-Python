@@ -1,4 +1,3 @@
-from functools import reduce
 from math import ceil
 from re import match
 
@@ -60,31 +59,17 @@ class AutoConvHandler:
 
     def _change_state(self, data, state=None):
         """Set variables for next state"""
-        print(self.conversation)
         data_context = self.tData.context.user_data
         if not state:
             state = self.conversation.get_state(
                 self.tData.context.user_data.get("state")
             )
-            if state.list and isinstance(data, int):
+            if state.list and isinstance(data, int) and not self.tData.update.message:
                 value = [
-                    b
-                    for b in reduce(lambda x, y: x + y, self._list_keyboard)
-                    if b.callback_data is not None and b.callback_data == data
+                    b for b in sum(self._list_keyboard, []) if b.callback_data == data
                 ][0].text
             else:
-                value = (
-                    d
-                    if (c := state.callback)
-                    and (
-                        d := c[0].get(
-                            data
-                            if not isinstance(data, int) and not str(data).isdigit()
-                            else int(data)
-                        )
-                    )
-                    else data
-                )
+                value = state.callback and state.callback[0].get(data) or data
             if state != self.conversation.end:
                 self.tData.context.user_data.get("data").update({state.name: value})
             new_state = self._next_state(state, data)
@@ -98,22 +83,14 @@ class AutoConvHandler:
             data_context.update({"error": False})
         elif data_context.get("error") is not None:
             data_context.pop("error")
-        if self._bkup_state_routes:
-            back_route = self._bkup_state_routes.pop("BACK", None)
-            default_route = self._bkup_state_routes.pop(-1, None)
-            self.conversation.add_routes(
-                self.prev_state,
-                self._bkup_state_routes,
-                default=default_route,
-                back=back_route,
-            )
-        self._bkup_state_routes = None
+        self._restore_basic_routes(self.prev_state)
         return new_state
 
     def _wrong_message(self, text=True):
         """Handler for wrong message"""
         self.tData.update.message.delete()
         state = self.conversation.get_state(self.tData.context.user_data.get("state"))
+        self._restore_basic_routes(state)
         error_text = text and state.regex_error_text or state.handler_error_text
         if error_text and not self.tData.context.user_data.get("error"):
             self.tData.context.user_data.update({"error": True})
@@ -131,16 +108,12 @@ class AutoConvHandler:
         data = self.tData.context.user_data
         if (state_l := data.get("list")) :
             i = int(data.get("list_i"))
+            new_i = i
             if state.list_all:
                 curr_list = self.list_labels or state_l
                 elem_list = data.get("data").get(state.name)
                 new_i = curr_list.index(elem_list) if elem_list in curr_list else i
-            elif (
-                not state.list_all
-                and data.get("data").get(state.name) not in state.list_buttons
-            ):
-                new_i = i
-            else:
+            elif data.get("data").get(state.name) in state.list_buttons:
                 new_i = (i - 1, i + 1)[
                     data.get("data").get(state.name) == state.list_buttons[1]
                 ]
@@ -151,7 +124,8 @@ class AutoConvHandler:
 
     def _build_dynamic_list(self, state, keyboard):
         """Build dynamic list for current state"""
-        self._bkup_state_routes = self.conversation.routes.get(state.name)
+        if self.prev_state != self.curr_state:
+            self._bkup_state_routes = self.conversation.routes.get(state.name)
         data = self.tData.context.user_data
         state_l = data.get("list")
         basic_routes = {
@@ -161,9 +135,8 @@ class AutoConvHandler:
         }
         for kl in keyboard:
             for button in kl:
-                if (c := button.callback_data) is not None and isinstance(c, int):
+                if (cd := button.callback_data) is not None and isinstance(cd, int):
                     button.callback_data += len(state_l)
-
         self.list_labels = state.list_labels and state.list_labels(self.tData.prepare())
         list_buttons = [
             [
@@ -207,8 +180,8 @@ class AutoConvHandler:
 
     def _build_dynamic_routes(self, state):
         """Build dynamic routes for current state"""
-        ro, de, ba = state.routes(self.tData.prepare())
-        self.conversation.add_routes(state, ro, de, ba)
+        routes, default, back = state.routes(self.tData.prepare())
+        self.conversation.add_routes(state, routes, default, back)
 
     def _build_dynamic_keyboard(self, state):
         """Build dynamic keyboard for current state"""
@@ -222,7 +195,7 @@ class AutoConvHandler:
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
             data.pop("list_i")
-            self.list_labels = None
+            self.list_labels, self._bkup_state_routes = None, None
         if state.list:
             self._update_dynamic_list(state)
         if state.action:
@@ -242,6 +215,18 @@ class AutoConvHandler:
         return InlineKeyboardMarkup(keyboard), reply_msg
 
     # ---- Dev functions
+
+    def _restore_basic_routes(self, state):
+        if not self._bkup_state_routes:
+            return
+        back_route = self._bkup_state_routes.pop("BACK", None)
+        default_route = self._bkup_state_routes.pop(-1, None)
+        self.conversation.add_routes(
+            state,
+            self._bkup_state_routes,
+            default=default_route,
+            back=back_route,
+        )
 
     def _init_context(self, state):
         """Initializate user data in context"""

@@ -60,6 +60,7 @@ class AutoConvHandler:
 
     def _change_state(self, data, state=None):
         """Set variables for next state"""
+        print(self.conversation)
         data_context = self.tData.context.user_data
         if not state:
             state = self.conversation.get_state(
@@ -109,32 +110,17 @@ class AutoConvHandler:
         self._bkup_state_routes = None
         return new_state
 
-    def _wrong_message(self):
+    def _wrong_message(self, text=True):
         """Handler for wrong message"""
         self.tData.update.message.delete()
         state = self.conversation.get_state(self.tData.context.user_data.get("state"))
-        if (
-            (self.tData.update.message.text and state.regex_error_text)
-            or state.handler_error_text
-        ) and not self.tData.context.user_data.get("error"):
-            keyboard = self._build_keyboard(state)
+        error_text = text and state.regex_error_text or state.handler_error_text
+        if error_text and not self.tData.context.user_data.get("error"):
             self.tData.context.user_data.update({"error": True})
-            msg = (
-                state.msg.replace("@@@", a)
-                if state.action and (a := state.action(self.tData.prepare()))
-                else state.msg
-            )
-            reply_msg = f"{msg}\n\n" + (
-                (self.tData.update.message.text and state.regex_error_text)
-                or state.handler_error_text
-            )
             self._send_message(
                 state,
                 self.tData.context.user_data.get("bot-msg").edit_text,
-                msg=reply_msg,
-                keyboard=InlineKeyboardMarkup(keyboard),
-                dynamic=False,
-                save=False,
+                post_func=lambda x: f"{x}\n\n{error_text}",
             )
         return self.NEXT
 
@@ -274,16 +260,15 @@ class AutoConvHandler:
                 return self.force_state(self.conversation.fallback_state, update)
             raise exception
 
-    def _send_message(
-        self, state, send_func, msg=None, keyboard=None, dynamic=True, save=True
-    ):
+    def _send_message(self, state, send_func, elements=None, save=True, post_func=str):
         """Main function to send messages"""
+        msg, keyboard = elements or (None, None)
         if state.long_task:
             send_func(state.long_task)
-        if dynamic:
+        if not elements:
             keyboard, msg = self._build_dynamic_stuff(state)
         new_msg = send_func(
-            self.conversation.default_func(msg),
+            self.conversation.default_func(post_func(msg)),
             reply_markup=keyboard,
             **(self.conversation.defaults | state.kwargs),
         )
@@ -337,7 +322,6 @@ class AutoConvHandler:
                 if (fbs := self.conversation.no_auth_state) :
                     return self.force_state(fbs, update)
                 return self.NEXT
-
             # ---- start | first message
             if not self.tData.context.user_data:
                 if delete_first:
@@ -354,22 +338,16 @@ class AutoConvHandler:
                 data = self.tData.update.callback_query.data
                 to_reply = self.tData.update.callback_query.edit_message_text
             else:
-                data = (state.handler and state.handler(self.tData.prepare())) or (
-                    state.regex and self.tData.update.message.text
-                )
                 if not state.regex and not state.handler:
                     self.tData.update.message.delete()
                     return self.NEXT
-                if (
-                    (
-                        state.regex
-                        and isinstance(data, str)
-                        and not match(state.regex, data)
-                    )
-                    or (state.regex and not data)
-                    or (state.handler and not data)
-                ):
-                    return self._wrong_message()
+                data = (
+                    state.handler
+                    and state.handler(self.tData.prepare())
+                    or self.tData.update.message.text
+                )
+                if state.regex and not match(state.regex, str(data)) or not data:
+                    return self._wrong_message(state.regex)
                 to_reply = self.tData.context.user_data.get("bot-msg").edit_text
                 self.tData.update.message.delete()
             # ---- next stage

@@ -83,8 +83,9 @@ class Conversation:
                 s := self.routes.get(state.name)
             ) else self.routes.update({state.name: {-1: default}})
         if back or state.back_button or self.default_back:
-            if state.back_button or (
-                state.back_button is not False and self.default_back
+            if not back and (
+                state.back_button
+                or (state.back_button is not False and self.default_back)
             ):
                 back = True
             if isinstance(back, State) and back not in self.state_list:

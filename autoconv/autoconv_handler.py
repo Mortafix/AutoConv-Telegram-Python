@@ -138,26 +138,18 @@ class AutoConvHandler:
                 if (cd := button.callback_data) is not None and isinstance(cd, int):
                     button.callback_data += len(state_l)
         self.list_labels = state.list_labels and state.list_labels(self.tData.prepare())
+        maxr, btns = state.list_max_row, state.list_buttons
         list_buttons = [
             [
                 InlineKeyboardButton(
-                    self.list_labels[r * state.list_max_row + i]
-                    if self.list_labels
-                    else b,
-                    callback_data=r * state.list_max_row + i,
+                    self.list_labels[r * maxr + i] if self.list_labels else button,
+                    callback_data=r * maxr + i,
                 )
-                for i, b in enumerate(
-                    state_l[
-                        r * state.list_max_row : r * state.list_max_row
-                        + state.list_max_row
-                    ]
-                    if state.list_all
-                    else state.list_buttons
+                for i, button in enumerate(
+                    state_l[r * maxr : r * maxr + maxr] if state.list_all else btns
                 )
             ]
-            for r in range(
-                ceil((len(state_l) if state.list_all else 1) / state.list_max_row)
-            )
+            for r in range(ceil((len(state_l) if state.list_all else 1) / maxr))
         ]
         keyboard = list_buttons + keyboard
         self._list_keyboard = keyboard

@@ -11,7 +11,7 @@ class AutoConvHandler:
     def __init__(self, conversation, telegram_state_name):
         self.conversation = conversation
         self.NEXT = telegram_state_name
-        self.tData = TelegramData()
+        self.tData = TelegramData(conversation.users_list)
         self.prev_state = None
         self.curr_state = conversation.start
         self._bkup_state_routes, self._list_keyboard = None, None
@@ -189,8 +189,14 @@ class AutoConvHandler:
         keyboard, size = keyboard if isinstance(keyboard, tuple) else (keyboard, None)
         state.add_keyboard(keyboard, size, max_row=state.max_row)
 
+    def _refresh_auth_users(self, state):
+        """Refresh authorized users"""
+        new_users = state.refresh_auth(self.tData.prepare())
+        self.conversation.users_list = new_users
+        self.tData.users = new_users
+
     def _build_dynamic_stuff(self, state):
-        """Compute dynamic stuff: action > routes > keyboard > list"""
+        """Compute dynamic stuff: action > routes > keyboard > list > refresh"""
         data = self.tData.context.user_data
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
@@ -207,6 +213,8 @@ class AutoConvHandler:
         keyboard = self._build_keyboard(state)
         if state.list:
             keyboard = self._build_dynamic_list(state, keyboard)
+        if state.refresh_auth:
+            self._refresh_auth_users(state)
         reply_msg = (
             state.msg.replace("@@@", action_str)
             if state.action and action_str

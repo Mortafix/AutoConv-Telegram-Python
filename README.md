@@ -142,6 +142,14 @@ State.set_long_task(
 ```
 - `text`: text for a message that will be sent before the main one (for long task).
 
+```python
+# function that return a new list of authorized users
+State.add_refresh_auth(
+    self, func: Callable
+)
+```
+- `func`: function must take one parameter (`TelegramData` object). It must return a list of Telegram ids. Called when its state is reached.
+
 ### Conversation
 ```python
 Conversation(
@@ -245,3 +253,4 @@ AutoConvHandler.force_state(
 - `sdata`: data for every state of the user.
 - `message`: message info, if possibile, of the user.
 - `exception`: last Python exception occurred.
+- `users`: list of current authorized users.

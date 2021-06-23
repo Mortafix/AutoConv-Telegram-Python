@@ -1,5 +1,5 @@
 class TelegramData:
-    def __init__(self):
+    def __init__(self, users):
         self.update = None
         self.context = None
         self.telegram_id = None
@@ -7,6 +7,7 @@ class TelegramData:
         self.sdata = None
         self.message = None
         self.exception = None
+        self.users = users
 
     def __str__(self):
         return (
@@ -15,6 +16,7 @@ class TelegramData:
             f"TELEGRAM ID {self.telegram_id}\n"
             f"USER DATA {self.udata}\n"
             f"STATES DATA {self.sdata}"
+            f"AUTH USERS {self.users}"
         )
 
     def update_telegram_data(self, update, context):

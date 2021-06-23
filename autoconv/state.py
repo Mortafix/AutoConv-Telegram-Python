@@ -35,6 +35,7 @@ class State:
         ) = (None, None, None, None, None, None)
         self.handler, self.handler_error_text = None, None
         self.long_task = None
+        self.refresh_auth = None
 
     def __str__(self):
         return f"State <{self.name}>"
@@ -132,3 +133,8 @@ class State:
     def set_long_task(self, text: str):
         """Add a middle message wainting for the long main task"""
         self.long_task = text
+
+    @validate_arguments
+    def add_refresh_auth(self, func: Callable):
+        """Add function that return a new list of authorized users (Telegram ids)"""
+        self.refresh_auth = func

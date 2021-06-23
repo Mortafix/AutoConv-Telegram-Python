@@ -15,7 +15,7 @@ class TelegramData:
             f"CONTEXT {self.context}\n"
             f"TELEGRAM ID {self.telegram_id}\n"
             f"USER DATA {self.udata}\n"
-            f"STATES DATA {self.sdata}"
+            f"STATES DATA {self.sdata}\n"
             f"AUTH USERS {self.users}"
         )
 

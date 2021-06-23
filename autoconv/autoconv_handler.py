@@ -14,7 +14,7 @@ class AutoConvHandler:
         self.tData = TelegramData(conversation.users_list)
         self.prev_state = None
         self.curr_state = conversation.start
-        self._bkup_state_routes, self._list_keyboard = None, None
+        self._bkup_routes, self._list_keyboard = None, None
         self.list_labels = None
 
     # ---- Next state
@@ -83,14 +83,14 @@ class AutoConvHandler:
             data_context.update({"error": False})
         elif data_context.get("error") is not None:
             data_context.pop("error")
-        self._restore_basic_routes(self.prev_state)
+        self._restore_basic_routes()
         return new_state
 
     def _wrong_message(self, text=True):
         """Handler for wrong message"""
         self.tData.update.message.delete()
         state = self.conversation.get_state(self.tData.context.user_data.get("state"))
-        self._restore_basic_routes(state)
+        self._restore_basic_routes()
         error_text = text and state.regex_error_text or state.handler_error_text
         if error_text and not self.tData.context.user_data.get("error"):
             self.tData.context.user_data.update({"error": True})
@@ -125,7 +125,7 @@ class AutoConvHandler:
     def _build_dynamic_list(self, state, keyboard):
         """Build dynamic list for current state"""
         if self.prev_state != self.curr_state:
-            self._bkup_state_routes = self.conversation.routes.get(state.name)
+            self._bkup_routes = (state.name, self.conversation.routes.get(state.name))
         data = self.tData.context.user_data
         state_l = data.get("list")
         basic_routes = {
@@ -193,7 +193,7 @@ class AutoConvHandler:
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
             data.pop("list_i")
-            self.list_labels, self._bkup_state_routes = None, None
+            self.list_labels, self._bkup_routes = None, None
         if state.list:
             self._update_dynamic_list(state)
         if state.action:
@@ -216,16 +216,15 @@ class AutoConvHandler:
 
     # ---- Dev functions
 
-    def _restore_basic_routes(self, state):
-        if not self._bkup_state_routes:
+    def _restore_basic_routes(self):
+        if not self._bkup_routes:
             return
-        back_route = self._bkup_state_routes.pop("BACK", None)
-        default_route = self._bkup_state_routes.pop(-1, None)
+        state, routes = self._bkup_routes
         self.conversation.add_routes(
-            state,
-            self._bkup_state_routes,
-            default=default_route,
-            back=back_route,
+            self.conversation.get_state(state),
+            routes,
+            default=routes.pop(-1, None),
+            back=routes.pop("BACK", None),
         )
 
     def _init_context(self, state):

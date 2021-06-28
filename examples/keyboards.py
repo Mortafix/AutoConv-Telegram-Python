@@ -3,6 +3,7 @@ import logging
 from autoconv.autoconv_handler import AutoConvHandler
 from autoconv.conversation import Conversation
 from autoconv.state import State
+from telegram import InlineKeyboardButton
 from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Filters, MessageHandler,
                           Updater)
@@ -37,10 +38,19 @@ STATE = range(1)
 
 
 # ---- FUNCS
-def custom_dynamic_keyboard(tdata):
+def dynamic_keyboard(tdata):
     # need to return a keyboard as list or dict
     state_value = tdata.sdata.get("dynamic")
     return ["Go back to go forward"] if state_value is None else ["Now you can go"]
+
+
+def custom_keyboard(tdata):
+    # need to return a list of InlineKyeboardButton
+    msg = "This is an example.. it doens't work."
+    return [
+        [InlineKeyboardButton("Share", switch_inline_query=msg)],
+        [InlineKeyboardButton("Next", callback_data=0)],
+    ]
 
 
 # ---- STATES
@@ -53,16 +63,21 @@ static_dict = State(
 static_dict.add_keyboard({42: "Go back", 99: "Next"})
 
 dynamic = State("dynamic", "This is a *dynamic keyboard* changed by a custom function.")
-dynamic.add_dynamic_keyboard(custom_dynamic_keyboard)
+dynamic.add_dynamic_keyboard(dynamic_keyboard)
+
+custom = State(
+    "custom", "This is the most powerful, but dangerous keyboard..\nthe *custom* one."
+)
+custom.add_custom_keyboard(custom_keyboard)
 
 end = State("end", "This is the *end*.")
 
 
 # ---- DYNAMIC
-def dynamic_routes_for_keyboard(tdata):
+def keyboard_dynamic_routes(tdata):
     # need to return a tuple: Routes, Default, back
     state_value = tdata.sdata.get("dynamic")
-    return (None, static_dict if state_value is None else end, None)
+    return (None, static_dict if state_value is None else custom, None)
 
 
 # ---- CONVERSATION
@@ -71,7 +86,8 @@ conv.set_defaults(params={"parse_mode": "Markdown"})
 conv.add_routes(static, default=static_dict)
 # same as -> conv.add_routes(static, routes={0: static_dict})
 conv.add_routes(static_dict, routes={42: static, 99: dynamic}, back=static)
-dynamic.add_dynamic_routes(dynamic_routes_for_keyboard)
+dynamic.add_dynamic_routes(keyboard_dynamic_routes)
+conv.add_routes(custom, default=end)
 
 # ---- HANDLER
 autoconv = AutoConvHandler(conv, STATE)
@@ -86,7 +102,7 @@ def autoconv_command(update, context):
 
 def main():
     """Bot instance"""
-    updater = Updater("BOT-TOKEN")
+    updater = Updater("1579494237:AAHw6nQfRBboYvD-PKB1mV4W0WUDoHtuPMc")
     dp = updater.dispatcher
 
     # -----------------------------------------------------------------------

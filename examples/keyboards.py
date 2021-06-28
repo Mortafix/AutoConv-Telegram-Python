@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from autoconv.autoconv_handler import AutoConvHandler
 from autoconv.conversation import Conversation
@@ -38,54 +37,41 @@ STATE = range(1)
 
 
 # ---- FUNCS
-def comment_type(data):
-    return "" if data == "0" else data
-
-
-def recap(tdata):
-    if (ma := 18 - tdata.sdata.get("age")) > 0 and tdata.sdata.get(
-        "consent"
-    ) == "Abort":
-        return f"Come back when you'll have your *parents consent* or in *{ma}* years."
-    return "\n".join([f"{k.title()}: *{v}*" for k, v in tdata.sdata.items()])
-
-
-def add_timestamp(text):
-    return f"({datetime.now():%H:%M})\n\n{text}"
+def custom_dynamic_keyboard(tdata):
+    # need to return a keyboard as list or dict
+    state_value = tdata.sdata.get("dynamic")
+    return ["Go back to go forward"] if state_value is None else ["Now you can go"]
 
 
 # ---- STATES
-name = State("name", "Enter your *name*.", data_type=str, back_button=False)
-name.add_text()
-gender = State("gender", "Select your *gender*", back_button="< Another back")
-gender.add_keyboard(["Male", "Female", "Other"])
-age = State("age", "Enter your <b>age</b>", parse_mode="html")
-age.add_text(r"\d{1,2}", "Enter a *valid* age")
-underage = State("consent", "Drop the _responsibility_ on your parents?")
-underage.add_keyboard(["Yes", "Abort"])
-comment = State(
-    "comment", "Do you want to enter additional comment?", data_type=comment_type
+static = State("static", "This State has a *simple static keyboard*.")
+static.add_keyboard(["Next"])
+
+static_dict = State(
+    "static_dict", "This is another static keyboard, but defined with a *dictionary*."
 )
-comment.add_keyboard(["Nope"])
-comment.add_text()
-end = State("end", "@@@", back_button=False)
-end.add_action(recap)
+static_dict.add_keyboard({42: "Go back", 99: "Next"})
+
+dynamic = State("dynamic", "This is a *dynamic keyboard* changed by a custom function.")
+dynamic.add_dynamic_keyboard(custom_dynamic_keyboard)
+
+end = State("end", "This is the *end*.")
+
+
+# ---- DYNAMIC
+def dynamic_routes_for_keyboard(tdata):
+    # need to return a tuple: Routes, Default, back
+    state_value = tdata.sdata.get("dynamic")
+    return (None, static_dict if state_value is None else end, None)
+
 
 # ---- CONVERSATION
-conv = Conversation(name, end_state=end)
-conv.set_defaults(
-    params={"parse_mode": "Markdown", "disable_web_page_preview": True},
-    func=add_timestamp,
-    back_button="< Back",
-)
-conv.add_routes(name, default=gender)
-conv.add_routes(gender, default=age, back=name)
-conv.add_routes(
-    age, routes={i: underage for i in range(19)}, default=comment, back=gender
-)
-conv.add_routes(underage, routes={0: comment, 1: end}, back=age)
-conv.add_routes(comment, default=end)
-conv.add_routes(end)
+conv = Conversation(static, end_state=end)
+conv.set_defaults(params={"parse_mode": "Markdown"})
+conv.add_routes(static, default=static_dict)
+# same as -> conv.add_routes(static, routes={0: static_dict})
+conv.add_routes(static_dict, routes={42: static, 99: dynamic}, back=static)
+dynamic.add_dynamic_routes(dynamic_routes_for_keyboard)
 
 # ---- HANDLER
 autoconv = AutoConvHandler(conv, STATE)

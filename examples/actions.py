@@ -1,7 +1,6 @@
 import logging
-import sys
-import traceback
 from datetime import datetime
+from time import sleep
 
 from autoconv.autoconv_handler import AutoConvHandler
 from autoconv.conversation import Conversation
@@ -20,10 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def error(update, context):
-    # logger.warning('Update "%s" caused error "%s"', update, context.error)
-    trace = sys.exc_info()[2]
-    traceback_error = "".join(traceback.format_tb(trace))
-    print(traceback_error)
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 def start(update, context):
@@ -62,6 +58,7 @@ def riddle_keyboard(tdata):
 
 def log_action(tdata):
     # no return in this function
+    sleep(1.5)
     if (answer := tdata.sdata.get("riddle")) != "0":
         tdata.udata.update({"riddle": answer})
     print(f"I just wanna log your name: {tdata.update.effective_chat.first_name}")
@@ -90,6 +87,8 @@ riddle.add_dynamic_keyboard(riddle_keyboard)
 log = State("log", "In this state there is a *hidden task* with a terminal log")
 log.add_action(log_action)
 log.add_keyboard(["Next"])
+# this will send a message while the main task is running
+log.set_long_task("Computing...")
 
 end = State("end", "This is the *end*.")
 

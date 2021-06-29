@@ -4,14 +4,14 @@
 ![GitHub](https://img.shields.io/github/license/mortafix/autoconv-telegram-python)
 
 # Setup
-You can find the package, [here](https://pypi.org/project/telegram-autoconv/).
+You can find the package on PyPi (pip), [here](https://pypi.org/project/telegram-autoconv/).
 ```
 pip3 install telegram-autoconv
 ```
 
 # Requirements
-* Python 3.8
-* telegram-python-bot 13
+* [Python 3.9+](https://www.python.org)
+* [python-telegram-bot 13+](https://github.com/python-telegram-bot/python-telegram-bot)
 
 # Import
 ```python
@@ -29,9 +29,25 @@ updater = Updater(BOT_TOKEN, persistence=persistence)
 ```
 > WARNING! This persistence will save the bot token in a pickle file.
 
+# Examples
+I know you want examples, in fact there is a beautiful folder with some [examples](https://github.com/Mortafix/AutoConv-Telegram-Python/tree/master/examples).  
+In the table below, you can find an example for every functions in the module.
+Function | Example
+| :------------- | :----------
+`add_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
+`add_text` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
+`add_action` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
+`add_dynamic_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
+`add_custom_keyboard` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
+`add_custom_routes` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
+`add_dynamic_list` | [dynamic_list.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/dynamic_list.py)
+`add_custom_handler`| [handlers.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/handlers.py)
+`set_long_task`| [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
+
+
 # Documentation
-I know you want examples, in fact there is a beautiful folder with some [examples](https://github.com/Mortafix/AutoConv-Telegram-Python/tree/master/examples).
-But here, you can find a little documentation.
+Do you want to read? I got you cover, baby!  
+No more than a little documentation.
 
 ### State
 ```python

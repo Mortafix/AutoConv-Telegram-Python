@@ -328,7 +328,7 @@ class AutoConvHandler:
                 data = (
                     state.handler
                     and state.handler(self.tData.prepare())
-                    or self.tData.update.message.text
+                    or (not state.handler and self.tData.update.message.text)
                 )
                 if state.regex and not match(state.regex, str(data)) or not data:
                     return self._wrong_message(state.regex)

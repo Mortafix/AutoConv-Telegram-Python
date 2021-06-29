@@ -102,7 +102,7 @@ def autoconv_command(update, context):
 
 def main():
     """Bot instance"""
-    updater = Updater("1579494237:AAHw6nQfRBboYvD-PKB1mV4W0WUDoHtuPMc")
+    updater = Updater("BOT-TOKEN")
     dp = updater.dispatcher
 
     # -----------------------------------------------------------------------

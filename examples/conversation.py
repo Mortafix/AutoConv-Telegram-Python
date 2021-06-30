@@ -63,7 +63,6 @@ end.add_keyboard(["Menu"])
 conv = Conversation(menu, fallback_state=errors)
 # a Conversation will run forever, except if it has an end State
 # error state is a State that catches all the exceptions in autoconv
-# if you want to catch bot exceptions, see above in the command section
 conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(errors, default=menu)
 conv.add_routes(menu, routes={0: end, 1: divisonbyzero})
@@ -97,10 +96,7 @@ def main():
         entry_points=[CommandHandler("example", autoconv_command)],
         states={
             STATE: [
-                MessageHandler(Filters.sticker, autoconv_command),
-                MessageHandler(Filters.photo, autoconv_command),
-                MessageHandler(Filters.video, autoconv_command),
-                MessageHandler(Filters.text, autoconv_command),
+                MessageHandler(Filters.all, autoconv_command),
                 CallbackQueryHandler(autoconv_command),
             ]
         },

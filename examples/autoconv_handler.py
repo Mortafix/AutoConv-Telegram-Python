@@ -123,10 +123,7 @@ def main():
             STATE: [
                 CommandHandler("restart", restart),
                 CommandHandler("help", help_handler),
-                MessageHandler(Filters.sticker, autoconv_command),
-                MessageHandler(Filters.photo, autoconv_command),
-                MessageHandler(Filters.video, autoconv_command),
-                MessageHandler(Filters.text, autoconv_command),
+                MessageHandler(Filters.all, autoconv_command),
                 CallbackQueryHandler(autoconv_command),
             ]
         },

@@ -128,7 +128,7 @@ def main():
         entry_points=[CommandHandler("example", autoconv_command)],
         states={
             STATE: [
-                MessageHandler(Filters.text, autoconv_command),
+                MessageHandler(Filters.all, autoconv_command),
                 CallbackQueryHandler(autoconv_command),
             ]
         },

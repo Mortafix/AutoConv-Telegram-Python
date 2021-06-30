@@ -39,7 +39,7 @@ Function | Example
 `add_action` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
 `add_dynamic_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
 `add_custom_keyboard` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
-`add_custom_routes` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
+`add_dynamic_routes` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
 `add_dynamic_list` | [dynamic_list.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/dynamic_list.py)
 `add_custom_handler`| [handlers.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/handlers.py)
 `set_long_task`| [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)

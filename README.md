@@ -32,17 +32,25 @@ updater = Updater(BOT_TOKEN, persistence=persistence)
 # Examples
 I know you want examples, in fact there is a beautiful folder with some [examples](https://github.com/Mortafix/AutoConv-Telegram-Python/tree/master/examples).  
 In the table below, you can find an example for every functions in the module.
-Function | Example
-| :------------- | :----------
-`add_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
-`add_text` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
-`add_action` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
-`add_dynamic_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
-`add_custom_keyboard` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
-`add_dynamic_routes` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py)
-`add_dynamic_list` | [dynamic_list.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/dynamic_list.py)
-`add_custom_handler`| [handlers.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/handlers.py)
-`set_long_task`| [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py)
+Function | Example | Documentation
+| :------------- | :---------- | :----------
+`add_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-keyboard)
+`add_text` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-text)
+`add_action` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-action)
+`add_dynamic_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-dynamic-keyboard)
+`add_custom_keyboard` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-custom-keyboard)
+`add_dynamic_routes` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-dynamic-routes)
+`add_dynamic_list` | [dynamic_list.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/dynamic_list.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-dynamic-list)
+`add_custom_handler`| [handlers.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/handlers.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-custom-handler)
+`set_long_task`| [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#set-long-task)
+`add_refresh_auth`| [authorization.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/authorization.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-refresh-auth)
+`Conversation` | [conversation.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/conversation.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#doc)
+`add_routes` | [conversation.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/conversation.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#add-routes)
+`set_defaults` | [defaults.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/defaults.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#set-defaults)
+`add_authorized_users` | [authorization.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/authorization.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#add-authorized-users)
+`restart` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#restart)
+`force_state` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#force-state)
+
 
 
 # Documentation

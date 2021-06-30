@@ -260,6 +260,12 @@ class AutoConvHandler:
             self.tData.context.user_data.update({"bot-msg": new_msg})
         return new_msg
 
+    def _do_operations(self, state, data):
+        if state.operations and data in state.operations:
+            state.operations.get(data)(self.tData.prepare())
+            return True
+        return False
+
     # ---- Public functions
 
     def force_state(self, state, update):
@@ -336,6 +342,8 @@ class AutoConvHandler:
                 self.tData.update.message.delete()
             # ---- next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
+            if self._do_operations(state, typed_data):
+                return self.NEXT
             state = self._change_state(typed_data)
             self._send_message(state, to_reply, save=False)
             if state == self.conversation.end:

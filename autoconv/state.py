@@ -36,6 +36,7 @@ class State:
         self.handler, self.handler_error_text = None, None
         self.long_task = None
         self.refresh_auth = None
+        self.operations = None
 
     def __str__(self):
         return f"State <{self.name}>"
@@ -131,10 +132,20 @@ class State:
 
     @validate_arguments
     def set_long_task(self, text: str):
-        """Add a middle message wainting for the long main task"""
+        """Add a middle message waiting for the long main task"""
         self.long_task = text
 
     @validate_arguments
     def add_refresh_auth(self, func: Callable):
         """Add function that return a new list of authorized users (Telegram ids)"""
         self.refresh_auth = func
+
+    @validate_arguments
+    def add_button_operations(
+        self, operations: Union[Sequence[Callable], Mapping[int, Callable]]
+    ):
+        """Add functions for keyboard buttons, State is not changed"""
+        if not isinstance(operations, Mapping):
+            operations = {i: op for i, op in enumerate(operations)}
+        self.operations = operations
+        print(self.operations)

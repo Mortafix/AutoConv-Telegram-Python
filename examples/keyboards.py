@@ -53,6 +53,35 @@ def custom_keyboard(tdata):
     ]
 
 
+def counter_keyboard(tdata):
+    # show the next button only if the counter == 5
+    if tdata.udata.get("counter") == 5:
+        return ["+1", "-1", "Next"], (2, 1)
+    return ["+1", "-1"]
+
+
+def show_counter(tdata):
+    # create the counter and show it
+    if not tdata.udata.get("counter"):
+        tdata.context.user_data.update({"counter": 0})
+    return str(tdata.udata.get("counter"))
+
+
+def change_counter(tdata, add):
+    # change the value of the counter
+    counter = tdata.udata.get("counter")
+    value = 1 if add else -1
+    tdata.context.user_data.update({"counter": counter + value})
+
+
+def sub_counter(tdata):
+    change_counter(tdata, False)
+
+
+def add_counter(tdata):
+    change_counter(tdata, True)
+
+
 # ---- STATES
 static = State("static", "This State has a *simple static keyboard*.")
 static.add_keyboard(["Next"])
@@ -69,6 +98,15 @@ custom = State(
     "custom", "This is the most powerful, but dangerous keyboard..\nthe *custom* one."
 )
 custom.add_custom_keyboard(custom_keyboard)
+
+operation = State(
+    "operation",
+    "These are *operations button* that trigger functions without change the state\nGo to *5* to continue..\n\nCounter: *@@@*",
+)
+operation.add_dynamic_keyboard(counter_keyboard)
+operation.add_action(show_counter)
+operation.add_operation_buttons([add_counter, sub_counter])
+# same as a dict -> operation.add_button_operations({0: add_counter, 1: sub_counter})
 
 end = State("end", "This is the *end*.")
 
@@ -87,7 +125,8 @@ conv.add_routes(static, default=static_dict)
 # same as -> conv.add_routes(static, routes={0: static_dict})
 conv.add_routes(static_dict, routes={42: static, 99: dynamic}, back=static)
 dynamic.add_dynamic_routes(keyboard_dynamic_routes)
-conv.add_routes(custom, default=end)
+conv.add_routes(custom, default=operation)
+conv.add_routes(operation, routes={2: end}, back=custom)
 
 # ---- HANDLER
 autoconv = AutoConvHandler(conv, STATE)

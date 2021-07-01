@@ -148,4 +148,3 @@ class State:
         if not isinstance(operations, Mapping):
             operations = {i: op for i, op in enumerate(operations)}
         self.operations = operations
-        print(self.operations)

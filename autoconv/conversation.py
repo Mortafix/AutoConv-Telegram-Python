@@ -1,4 +1,5 @@
 from typing import Callable, Optional, Sequence, Union
+from warnings import warn
 
 from autoconv.state import State
 from pydantic import validate_arguments
@@ -15,41 +16,35 @@ class Conversation:
         self.start = start_state
         self.end = end_state
         self.fallback_state = fallback_state
-        self.state_list = [st for st in [start_state, end_state, fallback_state] if st]
+        self.state_list = list()
         self.routes = dict()
         self.users_list = None
         self.defaults = dict()
         self.default_func = str
         self.default_back = None
+        self.add_routes(start_state)
+        self.add_routes(end_state)
+        self.add_routes(fallback_state)
 
     def __str__(self):
-        routes_print = "\n".join(
-            [
-                "  * {}:\n{}".format(
-                    s,
-                    "\n".join(["      {:>5} -> {}".format(v, d) for v, d in r.items()]),
-                )
-                for s, r in self.routes.items()
-            ]
-        )
-        heading = f"CONVERSATION\n{self.start} ==> " + (
-            f"{self.end}" if self.end else "..."
-        )
-        return (
-            f"{heading}\n"
-            f"# State list: {[str(s) for s in self.state_list]}\n"
-            f"# Routes:\n{routes_print}"
-        )
+        """Pretty printing of conversation"""
+        routes = [
+            f"  * {st}:\n" + "\n".join([f"\t{va:>4} -> {ro}" for va, ro in rou.items()])
+            for st, rou in sorted(self.routes.items())
+        ]
+        return "> CONVERSATION\n# Routes:\n" + "\n".join(routes)
 
-    def _add_states(self, states: Union[Sequence[State], State]):
+    def _add_state(self, state: State):
         """Add states to the conversation"""
-        if isinstance(states, State):
-            states = (states,)
-        for s in states:
-            if s not in self.state_list:
-                self.state_list.append(s)
-            else:
-                raise ValueError(f"Already exists a state with name <{s.name}>.")
+        if state in self.state_list:
+            raise ValueError(f"Already exists a state with name '{state.name}'.")
+        self.state_list.append(state)
+
+    def _check_routes(self):
+        """Check if very state has the routes, if not raise a warning"""
+        for state in self.state_list:
+            if state.name not in self.routes:
+                warn(f"No routes found for {state}")
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def add_routes(
@@ -61,27 +56,21 @@ class Conversation:
     ):
         """Add routes for a state"""
         if state not in self.state_list:
-            self._add_states(state)
+            self._add_state(state)
         if self.routes.get(state.name):
             self.routes.pop(state.name)
+        routes_dict = dict()
         if routes:
             for k, v in routes.items():
-                if (state.callback and k not in state.callback[0]) and k in (
-                    -1,
-                    "BACK",
-                ):
-                    raise ValueError(
-                        f"'{k}' it's not a possible value of {str(state)}."
-                    )
+                if state.callback and k not in state.callback[0] and k in (-1, "BACK"):
+                    raise ValueError(f"'{k}' it's not a possible value of {state}.")
                 if v not in self.state_list:
-                    self._add_states(v)
-            self.routes.update({state.name: routes})
+                    self._add_state(v)
+            routes_dict.update(routes)
         if default:
             if default not in self.state_list:
-                self._add_states(default)
-            s.update({-1: default}) if (
-                s := self.routes.get(state.name)
-            ) else self.routes.update({state.name: {-1: default}})
+                self._add_state(default)
+            routes_dict.update({-1: default})
         if back or state.back_button or self.default_back:
             if not back and (
                 state.back_button
@@ -89,10 +78,9 @@ class Conversation:
             ):
                 back = True
             if isinstance(back, State) and back not in self.state_list:
-                self._add_states(back)
-            s.update({"BACK": back}) if (
-                s := self.routes.get(state.name)
-            ) else self.routes.update({state.name: {"BACK": back}})
+                self._add_state(back)
+            routes_dict.update({"BACK": back})
+        self.routes.update({state.name: routes_dict})
 
     @validate_arguments
     def get_state(self, state_name: Optional[str]):
@@ -112,7 +100,7 @@ class Conversation:
         and an optional fallback State"""
         self.no_auth_state = no_auth_state
         self.users_list = users_list
-        self._add_states(no_auth_state)
+        self.add_routes(no_auth_state)
 
     @validate_arguments
     def set_defaults(

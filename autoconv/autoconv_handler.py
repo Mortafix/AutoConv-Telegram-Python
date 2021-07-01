@@ -17,6 +17,7 @@ class AutoConvHandler:
         self._bkup_routes, self._list_keyboard = None, None
         self.list_labels = None
         self.conversation._check_routes()
+        self.conversation._set_states_text()
 
     # ---- Next state
 

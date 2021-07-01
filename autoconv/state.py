@@ -9,7 +9,7 @@ class State:
     def __init__(
         self,
         state_name: str,
-        state_text: str,
+        state_text: Optional[str] = None,
         data_type: Callable = int,
         back_button: Optional[Union[bool, str]] = None,
         **kwargs,
@@ -25,14 +25,12 @@ class State:
         self.build, self.max_row = None, None
         self.custom = None
         self.routes = None
-        (
-            self.list,
-            self.list_all,
-            self.list_buttons,
-            self.list_start,
-            self.list_max_row,
-            self.list_labels,
-        ) = (None, None, None, None, None, None)
+        self.list = None
+        self.list_all = None
+        self.list_buttons = None
+        self.list_start = None
+        self.list_max_row = None
+        self.list_labels = None
         self.handler, self.handler_error_text = None, None
         self.long_task = None
         self.refresh_auth = None

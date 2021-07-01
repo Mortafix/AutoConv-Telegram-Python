@@ -1,8 +1,12 @@
-from typing import Callable, Optional, Sequence, Union
+from json import load as jload
+from re import search
+from typing import Callable, Mapping, Optional, Sequence, Union
 from warnings import warn
 
 from autoconv.state import State
 from pydantic import validate_arguments
+from toml import load as tload
+from yaml import load as yload
 
 
 class Conversation:
@@ -12,6 +16,7 @@ class Conversation:
         start_state: State,
         end_state: Optional[State] = None,
         fallback_state: Optional[State] = None,
+        state_messages: Optional[Union[str, Mapping[str, str]]] = None,
     ):
         self.start = start_state
         self.end = end_state
@@ -22,6 +27,7 @@ class Conversation:
         self.defaults = dict()
         self.default_func = str
         self.default_back = None
+        self.messages = state_messages
         self.add_routes(start_state)
         self.add_routes(end_state)
         self.add_routes(fallback_state)
@@ -34,6 +40,8 @@ class Conversation:
         ]
         return "> CONVERSATION\n# Routes:\n" + "\n".join(routes)
 
+    # ---- Dev
+
     def _add_state(self, state: State):
         """Add states to the conversation"""
         if state in self.state_list:
@@ -45,6 +53,25 @@ class Conversation:
         for state in self.state_list:
             if state.name not in self.routes:
                 warn(f"No routes found for {state}")
+
+    def _set_states_text(self):
+        """Load states messages from a file or a dict"""
+        if not self.messages:
+            return
+        if isinstance(self.messages, str):
+            ops = {"yaml": yload, "json": jload, "toml": tload}
+            extension = search(r"\.(\w+)$", self.messages).group(1)
+            if extension not in ops:
+                raise ValueError(f"File '.{extension}' not supported")
+            self.messages = ops.get(extension)(open(self.messages, encoding="utf-8"))
+            if not isinstance(self.messages, dict):
+                raise TypeError("Texts loaded form file must be a dictionary")
+        for state in self.state_list:
+            state.msg = self.messages.get(state.name) or state.msg
+            if not state.msg:
+                raise ValueError(f"Message of {state} can't be empty")
+
+    # ---- Public
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def add_routes(

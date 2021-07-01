@@ -77,7 +77,6 @@ conv.set_defaults(
 conv.add_routes(simple, default=opponent)
 conv.add_routes(opponent, default=sheep, back=simple)
 conv.add_routes(sheep, default=end, back=opponent)
-conv.add_routes(end)
 
 
 # ---- HANDLER

@@ -86,7 +86,6 @@ conv.add_authorized_users([18528224], no_auth)
 conv.add_routes(simple, default=add)
 conv.add_routes(add, default=users, back=simple)
 conv.add_routes(users, default=end, back=add)
-conv.add_routes(end)
 
 
 # ---- HANDLER

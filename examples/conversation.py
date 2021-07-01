@@ -57,17 +57,15 @@ divisonbyzero.add_action(lambda _: 42 / 0)
 divisonbyzero.add_keyboard(["Next"])
 
 end = State("end", "This is the *end*.", back_button=False)
-end.add_keyboard(["Menu"])
 
 # ---- CONVERSATION
-conv = Conversation(menu, fallback_state=errors)
+conv = Conversation(menu, end_state=end, fallback_state=errors)
 # a Conversation will run forever, except if it has an end State
 # error state is a State that catches all the exceptions in autoconv
 conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(errors, default=menu)
 conv.add_routes(menu, routes={0: end, 1: divisonbyzero})
 conv.add_routes(divisonbyzero, default=end, back=menu)
-conv.add_routes(end, default=menu)
 
 
 # ---- HANDLER

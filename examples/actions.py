@@ -94,12 +94,11 @@ end = State("end", "This is the *end*.")
 
 
 # ---- CONVERSATION
-conv = Conversation(simple)
+conv = Conversation(simple, end_state=end)
 conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(simple, default=riddle)
 conv.add_routes(riddle, default=log, back=simple)
 conv.add_routes(log, default=end, back=riddle)
-conv.add_routes(end, back=log)
 
 
 # ---- HANDLER

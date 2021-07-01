@@ -79,7 +79,6 @@ conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(simple, default=restart)
 conv.add_routes(restart, default=end, back=simple)
 conv.add_routes(help_state, default=simple)
-conv.add_routes(end)
 
 
 # ---- HANDLER

@@ -83,7 +83,6 @@ conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(sticker, default=image)
 conv.add_routes(image, default=video, back=sticker)
 conv.add_routes(video, default=end, back=image)
-conv.add_routes(end)
 
 
 # ---- HANDLER

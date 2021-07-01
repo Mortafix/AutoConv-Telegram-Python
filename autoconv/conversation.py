@@ -77,11 +77,13 @@ class Conversation:
     def add_routes(
         self,
         state: State,
-        routes: Optional[dict] = None,
+        routes: Optional[Mapping[int, State]] = None,
         default: Optional[State] = None,
         back: Optional[Union[bool, State]] = None,
     ):
         """Add routes for a state"""
+        if not state:
+            return
         if state not in self.state_list:
             self._add_state(state)
         if self.routes.get(state.name):

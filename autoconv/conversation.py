@@ -29,8 +29,8 @@ class Conversation:
         self.default_back = None
         self.messages = state_messages
         self.add_routes(start_state)
-        self.add_routes(end_state)
-        self.add_routes(fallback_state)
+        end_state and self.add_routes(end_state)
+        fallback_state and self.add_routes(fallback_state)
 
     def __str__(self):
         """Pretty printing of conversation"""
@@ -51,7 +51,7 @@ class Conversation:
     def _check_routes(self):
         """Check if very state has the routes, if not raise a warning"""
         for state in self.state_list:
-            if state.name not in self.routes:
+            if state.name not in self.routes and not state.routes:
                 warn(f"No routes found for {state}")
 
     def _set_states_text(self):
@@ -82,8 +82,6 @@ class Conversation:
         back: Optional[Union[bool, State]] = None,
     ):
         """Add routes for a state"""
-        if not state:
-            return
         if state not in self.state_list:
             self._add_state(state)
         if self.routes.get(state.name):

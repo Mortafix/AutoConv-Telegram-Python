@@ -139,7 +139,7 @@ class State:
         self.refresh_auth = func
 
     @validate_arguments
-    def add_button_operations(
+    def add_operation_buttons(
         self, operations: Union[Sequence[Callable], Mapping[int, Callable]]
     ):
         """Add functions for keyboard buttons, State is not changed"""

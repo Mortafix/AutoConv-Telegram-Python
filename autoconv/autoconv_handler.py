@@ -209,11 +209,7 @@ class AutoConvHandler:
             keyboard = self._build_dynamic_list(state, keyboard)
         if state.refresh_auth:
             self._refresh_auth_users(state)
-        reply_msg = (
-            state.msg.replace("@@@", action_str)
-            if state.action and action_str
-            else state.msg
-        )
+        reply_msg = state.msg.replace("@@@", state.action and action_str or "")
         return InlineKeyboardMarkup(keyboard), reply_msg
 
     # ---- Dev functions
@@ -344,9 +340,8 @@ class AutoConvHandler:
                 self.tData.update.message.delete()
             # ---- next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
-            if self._do_operations(state, typed_data):
-                return self.NEXT
-            state = self._change_state(typed_data)
+            if not self._do_operations(state, typed_data):
+                state = self._change_state(typed_data)
             self._send_message(state, to_reply, save=False)
             if state == self.conversation.end:
                 self.tData.context.user_data.clear()

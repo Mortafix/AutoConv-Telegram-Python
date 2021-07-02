@@ -110,6 +110,7 @@ class State:
         all_elements: bool = False,
         labels: Optional[Callable] = None,
         max_row: int = 4,
+        preserve_index: bool = False,
     ):
         """Add function to create a dynamic list with pages"""
         self.list = function
@@ -118,6 +119,7 @@ class State:
         self.list_start = start
         self.list_max_row = max_row
         self.list_labels = labels
+        self.list_preserve = preserve_index
 
     @validate_arguments
     def add_custom_handler(

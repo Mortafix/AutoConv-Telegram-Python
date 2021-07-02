@@ -1,3 +1,4 @@
+from copy import deepcopy
 from math import ceil
 from re import match
 
@@ -14,7 +15,7 @@ class AutoConvHandler:
         self.tData = TelegramData(conversation.users_list)
         self.prev_state = None
         self.curr_state = conversation.start
-        self._bkup_routes, self._list_keyboard = None, None
+        self._bkup_routes, self._list_keyboard, self._bkup_indexes = None, None, dict()
         self.list_labels = None
         self.conversation._check_routes()
         self.conversation._set_states_text()
@@ -119,10 +120,13 @@ class AutoConvHandler:
                 new_i = (i - 1, i + 1)[
                     data.get("data").get(state.name) == state.list_buttons[1]
                 ]
-            data.update({"list_i": new_i})
+            elem = state_l[new_i]
+            data.update({"list_i": new_i, "list_el": elem})
         else:
             state_l = state.list(self.tData.prepare())
-            data.update({"list": state_l, "list_i": state.list_start})
+            saved_i = self._bkup_indexes.get(state.name, state.list_start)
+            elem = state_l[saved_i]
+            data.update({"list": state_l, "list_i": saved_i, "list_el": elem})
 
     def _build_dynamic_list(self, state, keyboard):
         """Build dynamic list for current state"""
@@ -194,7 +198,9 @@ class AutoConvHandler:
         data = self.tData.context.user_data
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
-            data.pop("list_i")
+            last_i = data.pop("list_i")
+            if self.prev_state.list_preserve:
+                self._bkup_indexes.update({self.prev_state.name: last_i})
             self.list_labels, self._bkup_routes = None, None
         if state.list:
             self._update_dynamic_list(state)
@@ -217,7 +223,7 @@ class AutoConvHandler:
     def _restore_basic_routes(self):
         if not self._bkup_routes:
             return
-        state, routes = self._bkup_routes
+        state, routes = deepcopy(self._bkup_routes)
         self.conversation.add_routes(
             self.conversation.get_state(state),
             routes,

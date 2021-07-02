@@ -46,7 +46,8 @@ def labels_list(tdata):
 
 
 def show_current_element(tdata):
-    return tdata.udata.get("list")[tdata.udata.get("list_i")]
+    return tdata.udata.get("list_el")
+    # same as -> return tdata.udata.get("list")[tdata.udata.get("list_i")]
 
 
 def last_elem_keyboard(tdata):
@@ -61,7 +62,8 @@ simple.add_action(show_current_element)
 simple.add_keyboard(["Next"])
 
 showall = State(
-    "showall", "This is the *current* element\nTo go _Next_ go to _Opsie_...\n\n*@@@*"
+    "showall",
+    "This is the *current* element\nTo go in the next State, go to _Ops_...\n\n*@@@*",
 )
 showall.add_dynamic_list(simple_list, all_elements=True, labels=labels_list, max_row=2)
 showall.add_action(show_current_element)

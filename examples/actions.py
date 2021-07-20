@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from re import match
 from time import sleep
 
 from autoconv.autoconv_handler import AutoConvHandler
@@ -47,22 +48,35 @@ def current_timestamp(tdata):
 
 def riddle_answer(tdata):
     # check if there is a previuos answer
-    prev_answer = tdata.udata.get("riddle")
-    return prev_answer != "BACK" and prev_answer or "-"
+    prev_answer = tdata.sdata.get("riddle")
+    return prev_answer not in ("BACK", "0") and prev_answer or "-"
 
 
 def riddle_keyboard(tdata):
-    prev_answer = tdata.sdata.get("riddle")
-    return ["Next"] if prev_answer and prev_answer != "BACK" else []
+    prev_answer = tdata.sdata.get("riddle", "")
+    return ["Next"] if match(r"^(?i)footsteps$", str(prev_answer)) else []
+
+
+def get_counter(tdata):
+    return tdata.udata.get("error-counter", 0)
+
+
+def build_answer(tdata):
+    counter = get_counter(tdata)
+    if counter > 10:
+        return ".*", "Sorry for bothering you, you can answer everything you want now"
+    return (
+        counter,
+        "Don't worry, first time" if counter <= 1 else "Ops, it's more than one!",
+    )
 
 
 def log_action(tdata):
     # no return in this function
-    sleep(1.5)
+    sleep(1.5)  # long_task(tdata.sdata)
     if (answer := tdata.sdata.get("riddle")) != "0":
-        tdata.udata.update({"riddle": answer})
+        tdata.udata.update({"riddle-answer": answer})
     print(f"I just wanna log your name: {tdata.update.effective_chat.first_name}")
-    # long_task(tdata.sdata)
 
 
 # ---- STATES
@@ -84,6 +98,14 @@ riddle.add_text(r"^(?i)footsteps$", "*Wrong*!")
 riddle.add_action(riddle_answer)
 riddle.add_dynamic_keyboard(riddle_keyboard)
 
+dynamic = State(
+    "dynamic",
+    "This is a *dynamic* riddle\n_The answer is always the counter_\nWrong answers counter: *@@@*",
+    data_type=str,
+)
+dynamic.add_action(get_counter)
+dynamic.add_dynamic_text(build_answer)
+
 log = State("log", "In this state there is a *hidden task* with a terminal log")
 log.add_action(log_action)
 log.add_keyboard(["Next"])
@@ -97,8 +119,9 @@ end = State("end", "This is the *end*.")
 conv = Conversation(simple, end_state=end)
 conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(simple, default=riddle)
-conv.add_routes(riddle, default=log, back=simple)
-conv.add_routes(log, default=end, back=riddle)
+conv.add_routes(riddle, default=dynamic, back=simple)
+conv.add_routes(dynamic, default=log, back=riddle)
+conv.add_routes(log, default=end, back=dynamic)
 
 
 # ---- HANDLER

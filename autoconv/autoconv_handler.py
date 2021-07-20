@@ -83,25 +83,29 @@ class AutoConvHandler:
             {"prev_state": self.prev_state.name, "state": new_state.name}
         )
         if new_state.regex or new_state.handler:
-            data_context.update({"error": False})
+            data_context.update({"error": False, "error-counter": 0})
         elif data_context.get("error") is not None:
             data_context.pop("error")
+            data_context.pop("error-counter")
         self._restore_basic_routes()
         return new_state
 
-    def _wrong_message(self, text=True):
+    def _wrong_message(self, text, data):
         """Handler for wrong message"""
         self.tData.update.message.delete()
         state = self.conversation.get_state(self.tData.context.user_data.get("state"))
         self._restore_basic_routes()
+        # save data
+        error_counter = self.tData.context.user_data.get("error-counter", 0)
+        error_values = {"error": True, "error-counter": error_counter + 1}
+        self.tData.context.user_data.update(error_values)
+        self.tData.context.user_data.get("data").update({state.name: data})
+        # update msg
         error_text = text and state.regex_error_text or state.handler_error_text
-        if error_text and not self.tData.context.user_data.get("error"):
-            self.tData.context.user_data.update({"error": True})
-            self._send_message(
-                state,
-                self.tData.context.user_data.get("bot-msg").edit_text,
-                post_func=lambda x: f"{x}\n\n{error_text}",
-            )
+        self._send_message(
+            state,
+            self.tData.context.user_data.get("bot-msg").edit_text,
+        )
         return self.NEXT
 
     # ---- Dynamic stuff
@@ -193,9 +197,17 @@ class AutoConvHandler:
         self.conversation.users_list = new_users
         self.tData.users = new_users
 
+    def _build_dynamic_text(self, state):
+        regex, message = state.dynamic_text(self.tData.prepare())
+        state.add_text(regex is None and r"^.*$" or regex, message)
+        if self.tData.udata.get("error") and state.regex_error_text:
+            return f"\n\n{state.regex_error_text}"
+        return ""
+
     def _build_dynamic_stuff(self, state):
-        """Compute dynamic stuff: action > routes > keyboard > list > refresh"""
+        """Compute dynamic stuff: action > text > routes > keyboard > list > refresh"""
         data = self.tData.context.user_data
+        msg = state.msg
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
             last_i = data.pop("list_i")
@@ -206,6 +218,8 @@ class AutoConvHandler:
             self._update_dynamic_list(state)
         if state.action:
             action_str = state.action(self.tData.prepare())
+        if state.dynamic_text:
+            msg += self._build_dynamic_text(state)
         if state.routes:
             self._build_dynamic_routes(state)
         if state.build:
@@ -215,7 +229,7 @@ class AutoConvHandler:
             keyboard = self._build_dynamic_list(state, keyboard)
         if state.refresh_auth:
             self._refresh_auth_users(state)
-        reply_msg = state.msg.replace("@@@", state.action and action_str or "")
+        reply_msg = msg.replace("@@@", state.action and str(action_str) or "")
         return InlineKeyboardMarkup(keyboard), reply_msg
 
     # ---- Dev functions
@@ -235,7 +249,7 @@ class AutoConvHandler:
         """Initializate user data in context"""
         if not self.tData.context.user_data:
             self.tData.context.user_data.update(
-                {"prev_state": None, "state": state.name, "error": False, "data": {}}
+                {"prev_state": None, "state": state.name, "data": {}}
             )
 
     def _handle_bad_request(self, exception, update, state):
@@ -341,7 +355,7 @@ class AutoConvHandler:
                     or (not state.handler and self.tData.update.message.text)
                 )
                 if state.regex and not match(state.regex, str(data)) or not data:
-                    return self._wrong_message(state.regex)
+                    return self._wrong_message(state.regex, data)
                 to_reply = self.tData.context.user_data.get("bot-msg").edit_text
                 self.tData.update.message.delete()
             # ---- next stage

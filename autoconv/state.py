@@ -35,6 +35,7 @@ class State:
         self.long_task = None
         self.refresh_auth = None
         self.operations = None
+        self.dynamic_text = None
 
     def __str__(self):
         return f"State <{self.name}>"
@@ -93,6 +94,12 @@ class State:
         """Add function to build a custom keyboard
         must return a list of InlineKeyboardButton"""
         self.custom = function
+
+    @validate_arguments
+    def add_dynamic_text(self, function: Callable):
+        """Add function to build dynamic text regex
+        must return 2 values (regex, message), both can be None"""
+        self.dynamic_text = function
 
     @validate_arguments
     def add_dynamic_routes(self, function: Callable):

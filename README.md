@@ -36,6 +36,7 @@ Function | Example | Documentation
 | :------------- | :---------- | :----------
 `add_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-keyboard)
 `add_text` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-text)
+`add_dynamic_text` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-dynamic-text)
 `add_action` | [actions.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/actions.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-action)
 `add_dynamic_keybord` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-dynamic-keyboard)
 `add_custom_keyboard` | [keyboards.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/keyboards.py) | [State](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/State#add-custom-keyboard)

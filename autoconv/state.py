@@ -31,6 +31,7 @@ class State:
         self.list_start = None
         self.list_max_row = None
         self.list_labels = None
+        self.list_preserve = None
         self.handler, self.handler_error_text = None, None
         self.long_task = None
         self.refresh_auth = None
@@ -39,6 +40,11 @@ class State:
 
     def __str__(self):
         return f"State <{self.name}>"
+
+    def __eq__(self, other):
+        if not isinstance(other, State):
+            return False
+        return self.name == other.name
 
     @validate_arguments
     def add_keyboard(

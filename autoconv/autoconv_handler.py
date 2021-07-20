@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime
 from math import ceil
 from re import match
 
@@ -102,9 +103,13 @@ class AutoConvHandler:
         self.tData.context.user_data.get("data").update({state.name: data})
         # update msg
         error_text = text and state.regex_error_text or state.handler_error_text
+        func = (
+            lambda x: x + f"\n\n{error_text}"
+            if error_text and not state.dynamic_text
+            else x
+        )
         self._send_message(
-            state,
-            self.tData.context.user_data.get("bot-msg").edit_text,
+            state, self.tData.context.user_data.get("bot-msg").edit_text, post_func=func
         )
         return self.NEXT
 
@@ -274,6 +279,7 @@ class AutoConvHandler:
             reply_markup=keyboard,
             **(self.conversation.defaults | state.kwargs),
         )
+        self.tData.context.user_data.update({"last-message-time": str(datetime.now())})
         if save:
             self.tData.context.user_data.update({"bot-msg": new_msg})
         return new_msg

@@ -79,6 +79,12 @@ class State:
         self.regex_error_text = error_message
 
     @validate_arguments
+    def add_dynamic_text(self, function: Callable):
+        """Add function to build dynamic text regex
+        must return 2 values (regex, message), both can be None"""
+        self.dynamic_text = function
+
+    @validate_arguments
     def add_action(self, function: Callable):
         """Add dynamic action"""
         self.action = function
@@ -94,12 +100,6 @@ class State:
         """Add function to build a custom keyboard
         must return a list of InlineKeyboardButton"""
         self.custom = function
-
-    @validate_arguments
-    def add_dynamic_text(self, function: Callable):
-        """Add function to build dynamic text regex
-        must return 2 values (regex, message), both can be None"""
-        self.dynamic_text = function
 
     @validate_arguments
     def add_dynamic_routes(self, function: Callable):

@@ -23,7 +23,7 @@ from autoconv.autoconv_handler import AutoConvHandler
 # Persistence
 If you want to use persistence in your bot, Autoconv provides a simple persistence based on PicklePersistence. The normal PicklePersistence doesn't work, due to an instance of a `Telegram.Message` in the `user_data`, this persistence uses a workaround.
 ```python
-from autoconv.persistence import AutoconvPersistence
+from autoconv.utils.persistence import AutoconvPersistence
 persistence = AutoconvPersistence(filename="bot_persistence", bot_token=BOT_TOKEN)
 updater = Updater(BOT_TOKEN, persistence=persistence)
 ```
@@ -51,6 +51,9 @@ Function | Example | Documentation
 `set_defaults` | [defaults.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/defaults.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#set-defaults)
 `add_authorized_users` | [authorization.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/authorization.py) | [Conversation](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Conversation#add-authorized-users)
 `state_messages` | [texts.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/texts.py) | [Texts Guide](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/Texts-Guide)
+`set_timed_function` | [async.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/async.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#set-timed-function)
+`stop_timed_function` | [async.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/async.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#stop-timed-function)
+`send_autodestroy_message` | [async.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/async.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#send-autodestroy-message)
 `restart` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#restart)
 `force_state` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#force-state)
 

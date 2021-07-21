@@ -2,8 +2,10 @@ from copy import deepcopy
 from datetime import datetime
 from math import ceil
 from re import match
+from time import sleep
 
-from autoconv.telegram_data import TelegramData
+from autoconv.utils.telegram_data import TelegramData
+from autoconv.utils.timed_thread import TimedThread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest
 from telegram.ext import ConversationHandler
@@ -20,8 +22,9 @@ class AutoConvHandler:
         self.list_labels = None
         self.conversation._check_routes()
         self.conversation._set_states_text()
+        self.threads = list()
 
-    # ---- Next state
+    # -------- changing state --------
 
     def _build_keyboard(self, state):
         """Build Keyboard for callback state"""
@@ -113,7 +116,7 @@ class AutoConvHandler:
         )
         return self.NEXT
 
-    # ---- Dynamic stuff
+    # -------- Dynamic stuff --------
 
     def _update_dynamic_list(self, state):
         """Update i and routes backup for dynamic list"""
@@ -237,7 +240,7 @@ class AutoConvHandler:
         reply_msg = msg.replace("@@@", state.action and str(action_str) or "")
         return InlineKeyboardMarkup(keyboard), reply_msg
 
-    # ---- Dev functions
+    # -------- Dev functions --------
 
     def _restore_basic_routes(self):
         if not self._bkup_routes:
@@ -290,8 +293,53 @@ class AutoConvHandler:
             return True
         return False
 
-    # ---- Public functions
+    # -------- Public functions ---------
 
+    # ---- async
+    def set_timed_function(self, seconds, state=None, function=None):
+        """Start a timer to change the state"""
+        self.stop_timed_function()
+
+        def _timed_force_state():
+            if function:
+                function(self.tData.prepare())
+            if state:
+                self.force_state(state, self.tData.update)
+
+        name = state and (isinstance(state, str) and state or state.name)
+        name = name or function and function.__name__
+        thread = TimedThread(seconds, name=name, target=_timed_force_state)
+        self.threads.append(thread)
+        thread.start()
+
+    def stop_timed_function(self, state=None, function=None):
+        """Stop a running thread, while cleaning dead thread"""
+        name = state and (isinstance(state, str) and state or state.name)
+        name = name or function and function.__name__
+        for i, thread in enumerate(self.threads):
+            if thread.name == name or thread.is_dead:
+                thread.stop()
+                self.threads.pop(i)
+
+    def send_autodestroy_message(self, msg, seconds, **kwargs):
+        """Send a message (outside the conversation) that will autodestroy itself"""
+
+        def send_message(tdata):
+            chat_id = tdata.update.effective_chat.id
+            msg_id = tdata.context.bot.send_message(chat_id, msg, **kwargs)
+            sleep(seconds)
+            msg_id.delete()
+
+        self.set_timed_function(0, function=send_message)
+
+    def get_threads(self):
+        """Get running threads, true=alive false=dead"""
+        return {
+            thread.name: thread.is_dead and "dead" or "running"
+            for thread in self.threads
+        }
+
+    # ---- forcing
     def force_state(self, state, update):
         """Force a state in the conversation"""
         if isinstance(state, str):
@@ -319,6 +367,7 @@ class AutoConvHandler:
             self.tData.update_telegram_data(update, context)
         return self.force_state(self.conversation.start, update)
 
+    # ---- main
     def manage_conversation(self, update, context, delete_first=False):
         """Master function for converastion"""
         state = None

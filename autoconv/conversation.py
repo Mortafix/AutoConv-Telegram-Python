@@ -68,8 +68,6 @@ class Conversation:
                 raise TypeError("Texts loaded form file must be a dictionary")
         for state in self.state_list:
             state.msg = self.messages.get(state.name) or state.msg
-            if not state.msg:
-                raise ValueError(f"Message of {state} can't be empty")
 
     # ---- Public
 

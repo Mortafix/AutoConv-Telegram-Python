@@ -1,5 +1,6 @@
 class TelegramData:
-    def __init__(self, users):
+    def __init__(self, autoconv, users):
+        self.autoconv = autoconv
         self.update = None
         self.context = None
         self.telegram_id = None

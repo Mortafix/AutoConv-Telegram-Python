@@ -38,7 +38,7 @@ autoconv, STATE = range(2)
 
 # ---- FUNCS
 def go_to_next(tdata):
-    autoconv.set_timed_function(3, "log")
+    tdata.autoconv.set_timed_function(3, "log")
 
 
 def print_name(tdata):
@@ -46,23 +46,23 @@ def print_name(tdata):
 
 
 def log_values(tdata):
-    autoconv.set_timed_function(5, function=print_name)
+    tdata.autoconv.set_timed_function(5, function=print_name)
 
 
 def bomb_explosion(tdata):
-    autoconv.set_timed_function(3, "bomb")
+    tdata.autoconv.set_timed_function(3, "bomb")
 
 
 def defuse_bomb(tdata):
-    autoconv.stop_timed_function("bomb")
+    tdata.autoconv.stop_timed_function("bomb")
     # if you are fast enough you can stop the console log
-    autoconv.stop_timed_function(function=print_name)
+    tdata.autoconv.stop_timed_function(function=print_name)
 
 
 def show_password(tdata):
     # you can pass every kwargs you want
-    autoconv.send_autodestroy_message(
-        "The *password* is `pink-elephant-42`!", 3, parse_mode="Markdown"
+    tdata.autoconv.send_autodestroy_message(
+        "The *password* is `pink-elephant-42`!", 2, parse_mode="Markdown"
     )
 
 
@@ -94,7 +94,7 @@ bomb.add_keyboard(["Begin"])
 
 password = State(
     "password",
-    "This state will send a message that will *autodestroy* itself in 3 seconds",
+    "This state will send a message that will *autodestroy* itself in 2 seconds",
 )
 password.add_action(defuse_bomb)
 password.add_keyboard(["Next", "Show password"], (1, 1))

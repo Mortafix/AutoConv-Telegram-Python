@@ -15,7 +15,7 @@ class AutoConvHandler:
     def __init__(self, conversation, telegram_state_name):
         self.conversation = conversation
         self.NEXT = telegram_state_name
-        self.tData = TelegramData(conversation.users_list)
+        self.tData = TelegramData(self, conversation.users_list)
         self.prev_state = None
         self.curr_state = conversation.start
         self._bkup_routes, self._list_keyboard, self._bkup_indexes = None, None, dict()

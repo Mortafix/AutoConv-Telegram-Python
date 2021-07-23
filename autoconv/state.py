@@ -9,7 +9,7 @@ class State:
     def __init__(
         self,
         state_name: str,
-        state_text: Optional[str] = "@@@",
+        state_text: str = "@@@",
         data_type: Callable = int,
         back_button: Optional[Union[bool, str]] = None,
         **kwargs,

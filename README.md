@@ -13,13 +13,6 @@ pip3 install telegram-autoconv
 * [Python 3.9+](https://www.python.org)
 * [python-telegram-bot 13+](https://github.com/python-telegram-bot/python-telegram-bot)
 
-# Import
-```python
-from autoconv.state import State
-from autoconv.conversation import Conversation
-from autoconv.autoconv_handler import AutoConvHandler
-```
-
 # Persistence
 If you want to use persistence in your bot, Autoconv provides a simple persistence based on PicklePersistence. The normal PicklePersistence doesn't work, due to an instance of a `Telegram.Message` in the `user_data`, this persistence uses a workaround.
 ```python

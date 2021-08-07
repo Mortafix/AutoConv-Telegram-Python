@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from random import choice
 from re import match
 from time import sleep
 
@@ -79,6 +80,18 @@ def log_action(tdata):
     print(f"I just wanna log your name: {tdata.update.effective_chat.first_name}")
 
 
+def go_to_random(tdata):
+    # you can use force state (from tdata.autoconv) to force a state
+    # it works in operations button and in action too
+    random_state = choice(tdata.autoconv.conversation.state_list)
+    print(f"> Going to {random_state}")
+    tdata.context.user_data.get("data").clear()
+    tdata.autoconv.force_state(random_state, tdata.update)
+    # always use EXIT_SIGNAL to interrupt autoconv
+    # if you don't use EXIT_SIGNAL, Autoconv will continue as normal (not intended)
+    return tdata.autoconv.EXIT_SIGNAL
+
+
 # ---- STATES
 simple = State(
     "simple",
@@ -112,6 +125,10 @@ log.add_keyboard(["Next"])
 # this will send a message while the main task is running
 log.set_long_task("Computing...")
 
+force = State("force", "This state has an *advanced features*, check out the code!")
+force.add_keyboard(["Next", "Go to a random state"])
+force.add_operation_buttons({1: go_to_random})
+
 end = State("end", "This is the *end*.")
 
 
@@ -121,7 +138,8 @@ conv.set_defaults(params={"parse_mode": "Markdown"}, back_button="Back")
 conv.add_routes(simple, default=riddle)
 conv.add_routes(riddle, default=dynamic, back=simple)
 conv.add_routes(dynamic, default=log, back=riddle)
-conv.add_routes(log, default=end, back=dynamic)
+conv.add_routes(log, default=force, back=dynamic)
+conv.add_routes(force, default=end, back=log)
 
 
 # ---- HANDLER

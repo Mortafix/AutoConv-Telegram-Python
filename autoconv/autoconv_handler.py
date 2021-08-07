@@ -23,6 +23,7 @@ class AutoConvHandler:
         self.conversation._check_routes()
         self.conversation._set_states_text()
         self.threads = list()
+        self.EXIT_SIGNAL = "!EXIT!"
 
     # -------- changing state --------
 
@@ -129,9 +130,8 @@ class AutoConvHandler:
                 elem_list = data.get("data").get(state.name)
                 new_i = curr_list.index(elem_list) if elem_list in curr_list else i
             elif data.get("data").get(state.name) in state.list_buttons:
-                new_i = (i - 1, i + 1)[
-                    data.get("data").get(state.name) == state.list_buttons[1]
-                ]
+                roads = {state.list_buttons[0]: i - 1, state.list_buttons[1]: i + 1}
+                new_i = roads.get(data.get("data").get(state.name), i)
             elem = state_l[new_i]
             data.update({"list_i": new_i, "list_el": elem})
         else:
@@ -218,14 +218,19 @@ class AutoConvHandler:
         msg = state.msg
         if self.prev_state != self.curr_state and data.get("list"):
             data.pop("list")
+            data.pop("list_el")
             last_i = data.pop("list_i")
-            if self.prev_state.list_preserve:
+            if not self.prev_state:
+                self.prev_state = state
+            if self.prev_state and self.prev_state.list_preserve:
                 self._bkup_indexes.update({self.prev_state.name: last_i})
             self.list_labels, self._bkup_routes = None, None
         if state.list:
             self._update_dynamic_list(state)
         if state.action:
             action_str = state.action(self.tData.prepare())
+            if action_str == self.EXIT_SIGNAL:
+                return action_str
         if state.dynamic_text:
             msg += self._build_dynamic_text(state)
         if state.routes:
@@ -276,7 +281,11 @@ class AutoConvHandler:
         if state.long_task:
             send_func(state.long_task)
         if not elements:
-            keyboard, msg = self._build_dynamic_stuff(state)
+            reply_dynamic = self._build_dynamic_stuff(state)
+            if isinstance(reply_dynamic, str):
+                if reply_dynamic == self.EXIT_SIGNAL:
+                    return
+            keyboard, msg = reply_dynamic
         new_msg = send_func(
             self.conversation.default_func(post_func(msg)),
             reply_markup=keyboard,
@@ -288,9 +297,10 @@ class AutoConvHandler:
         return new_msg
 
     def _do_operations(self, state, data):
+        if isinstance(data, int):
+            data = data - len(self.tData.udata.get("list", []))
         if state.operations and data in state.operations:
-            state.operations.get(data)(self.tData.prepare())
-            return True
+            return state.operations.get(data)(self.tData.prepare())
         return False
 
     # -------- Public functions ---------
@@ -415,12 +425,12 @@ class AutoConvHandler:
                 self.tData.update.message.delete()
             # ---- next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
-            if not self._do_operations(state, typed_data):
+            if not self._do_operations(state, typed_data) == self.EXIT_SIGNAL:
                 state = self._change_state(typed_data)
-            self._send_message(state, to_reply, save=False)
-            if state == self.conversation.end:
-                self.tData.context.user_data.clear()
-                return ConversationHandler.END
+                self._send_message(state, to_reply, save=False)
+                if state == self.conversation.end:
+                    self.tData.context.user_data.clear()
+                    return ConversationHandler.END
             return self.NEXT
         except (Exception, BadRequest) as e:
             self._handle_bad_request(e, update, state)

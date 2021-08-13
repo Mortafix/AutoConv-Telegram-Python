@@ -208,7 +208,7 @@ class AutoConvHandler:
     def _build_dynamic_text(self, state):
         regex, message = state.dynamic_text(self.tData.prepare())
         state.add_text(regex is None and r"^.*$" or regex, message)
-        if self.tData.udata.get("error") and state.regex_error_text:
+        if self.tData.context.user_data.get("error") and state.regex_error_text:
             return f"\n\n{state.regex_error_text}"
         return ""
 
@@ -298,7 +298,7 @@ class AutoConvHandler:
 
     def _do_operations(self, state, data):
         if isinstance(data, int):
-            data = data - len(self.tData.udata.get("list", []))
+            data = data - len(self.tData.context.user_data.get("list", []))
         if state.operations and data in state.operations:
             return state.operations.get(data)(self.tData.prepare())
         return False

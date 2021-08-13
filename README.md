@@ -5,7 +5,8 @@
 
 ![Alt text](images/Autoconv-Text.jpg "Autoconv")
 Welcome to Autoconv!  
-A Python package that help you build complex Telegram bot conversations with buttons, actions and much more.
+A Python package that help you build complex Telegram bot conversations with buttons, actions and much more.  
+This package is built over the awesome [Python-Telegram-Bot](https://python-telegram-bot.org)!
 
 # Setup
 You can find the package on [PyPi (pip)](https://pypi.org/project/telegram-autoconv/).

@@ -46,6 +46,9 @@ Function | Example | Documentation
 `send_autodestroy_message` | [async.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/async.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#send-autodestroy-message)
 `restart` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#restart)
 `force_state` | [autoconv_handler.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/autoconv_handler.py) | [AutoConvHandler](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/AutoConv-Handler#force-state)
+`save` | [tdata.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/tdata.py) | [TelegamData](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/TelegramData#save)
+`add` | [tdata.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/tdata.py) | [TelegamData](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/TelegramData#add)
+`get_or_set` | [tdata.py](https://github.com/Mortafix/AutoConv-Telegram-Python/blob/master/examples/tdata.py) | [TelegamData](https://github.com/Mortafix/AutoConv-Telegram-Python/wiki/TelegramData#get-or-set)
 
 # Persistence
 If you want to use persistence in your bot, Autoconv provides a simple persistence based on PicklePersistence.  

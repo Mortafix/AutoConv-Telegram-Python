@@ -20,6 +20,8 @@ class TelegramData:
             f"AUTH USERS {self.users}"
         )
 
+    # ---- Update functions
+
     def update_telegram_data(self, update, context):
         self.update = update
         self.context = context
@@ -30,3 +32,20 @@ class TelegramData:
         self.sdata = self.udata.get("data") if self.udata else None
         self.message = self.update.message
         return self
+
+    # ---- Public function
+
+    def save(self, *args, **kwargs):
+        self.context.user_data.update(*args, **kwargs)
+        self.prepare()
+
+    def add(self, key, value):
+        prev_value = self.udata.get(key)
+        self.context.user_data.update({key: prev_value + value})
+        self.prepare()
+        return prev_value + value
+
+    def get_or_set(self, key, set_value):
+        if key not in self.udata:
+            self.save({key: set_value})
+        return self.udata.get(key)

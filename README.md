@@ -68,3 +68,11 @@ No more than a little documentation in the [Wiki](https://github.com/Mortafix/Au
 I have a simple movies info Telegram bot publicy available.  
 You can interact with the Bot (the response time it kinda high, caused by very slow connection) [PopCorn](https://t.me/poppycorn_bot) (sorry for the italian).  
 The code (except for the config files) is in this [GIST](https://gist.github.com/Mortafix/93a866c71040557c309f0115aa1a2767).
+
+----
+
+## Do you want to help me?
+
+If you want to contribute you are welcome! I don't have guidelines for now, but contact me on Telegram [@Mortafix](https://t.me/mortafix).  
+If you want to donate, thank you so much for your support!  
+<a href="https://www.buymeacoffee.com/moris" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>

@@ -91,13 +91,13 @@ class AutoConvHandler:
             data_context.update({"error": False, "error-counter": 0})
         elif data_context.get("error") is not None:
             data_context.pop("error")
-            data_context.pop("error-counter")
+            data_context.pop("error-counter", 0)
         self._restore_basic_routes()
         return new_state
 
     def _wrong_message(self, text, data):
         """Handler for wrong message"""
-        self.tData.update.message.delete()
+        self.safe_delete_message(self.tData.update.message)
         state = self.conversation.get_state(self.tData.context.user_data.get("state"))
         self._restore_basic_routes()
         # save data
@@ -122,7 +122,7 @@ class AutoConvHandler:
     def _update_dynamic_list(self, state):
         """Update i and routes backup for dynamic list"""
         data = self.tData.context.user_data
-        if (state_l := data.get("list")) :
+        if state_l := data.get("list"):
             i = int(data.get("list_i"))
             new_i = i
             if state.list_all:
@@ -297,11 +297,19 @@ class AutoConvHandler:
         return new_msg
 
     def _do_operations(self, state, data):
+        """Apply operations if exists in this state and button"""
         if isinstance(data, int):
             data = data - len(self.tData.context.user_data.get("list", []))
         if state.operations and data in state.operations:
             return state.operations.get(data)(self.tData.prepare())
         return False
+
+    def safe_delete_message(self, message):
+        """Safe delete messages (for group and channel)"""
+        try:
+            message.delete()
+        except BadRequest:
+            pass
 
     # -------- Public functions ---------
 
@@ -338,7 +346,7 @@ class AutoConvHandler:
             chat_id = tdata.update.effective_chat.id
             msg_id = tdata.context.bot.send_message(chat_id, msg, **kwargs)
             sleep(seconds)
-            msg_id.delete()
+            self.safe_delete_message(msg_id)
 
         self.set_timed_function(0, function=send_message)
 
@@ -370,8 +378,8 @@ class AutoConvHandler:
     def restart(self, update, context):
         """Restart handler to initial configuration"""
         if self.tData.context:
-            self.tData.context.user_data.get("data").clear()
-            self.tData.context.user_data.pop("bot-msg")
+            self.tData.context.user_data.get("data", {}).clear()
+            self.tData.context.user_data.pop("bot-msg", 0)
             self.tData.prepare()
         else:
             self.tData.update_telegram_data(update, context)
@@ -386,19 +394,18 @@ class AutoConvHandler:
                 context.user_data.get("prev_state")
             )
             self.tData.update_telegram_data(update, context)
-            telegram_id = self.tData.update.effective_chat.id
             # ---- check authorization
             if (
                 self.conversation.users_list is not None
-                and telegram_id not in self.conversation.users_list
+                and update.effective_user.id not in self.conversation.users_list
             ):
-                if (fbs := self.conversation.no_auth_state) :
+                if fbs := self.conversation.no_auth_state:
                     return self.force_state(fbs, update)
                 return self.NEXT
             # ---- start | first message
             if not self.tData.context.user_data:
                 if delete_first:
-                    update.message.delete()
+                    self.safe_delete_message(update.message)
                 state = self.conversation.start
                 self._init_context(state)
                 self._send_message(state, self.tData.update.message.reply_text)
@@ -412,7 +419,7 @@ class AutoConvHandler:
                 to_reply = self.tData.update.callback_query.edit_message_text
             else:
                 if not state.regex and not state.handler:
-                    self.tData.update.message.delete()
+                    self.safe_delete_message(self.tData.update.message)
                     return self.NEXT
                 data = (
                     state.handler
@@ -422,7 +429,7 @@ class AutoConvHandler:
                 if state.regex and not match(state.regex, str(data)) or not data:
                     return self._wrong_message(state.regex, data)
                 to_reply = self.tData.context.user_data.get("bot-msg").edit_text
-                self.tData.update.message.delete()
+                self.safe_delete_message(self.tData.update.message)
             # ---- next stage
             typed_data = state.data_type(data) if data != "BACK" else "BACK"
             if not self._do_operations(state, typed_data) == self.EXIT_SIGNAL:

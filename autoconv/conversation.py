@@ -6,7 +6,7 @@ from warnings import warn
 from autoconv.state import State
 from pydantic import validate_arguments
 from toml import load as tload
-from yaml import load as yload
+from yaml import safe_load as yload
 
 
 class Conversation:
